@@ -12,7 +12,27 @@ repositories {
 }
 
 dependencies {
-    implementation('com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.15.2')
+    implementation group: 'io.reactivex.rxjava2', name: 'rxjava', version: '2.2.2'
+    implementation group: 'com.amazonaws', name: 'amazon-kinesis-video-streams-parser-library', version: '1.2.1'
+    implementation group: 'org.java-websocket', name: 'Java-WebSocket', version: '1.5.4'
+    implementation(
+            'software.amazon.awssdk:transcribestreaming:2.16.30',
+
+            'com.amazonaws:aws-java-sdk-dynamodb:1.11.987',
+            'com.amazonaws:aws-java-sdk-kinesisvideo:1.11.987',
+            'com.amazonaws:aws-lambda-java-core:1.2.1',
+            'com.amazonaws:aws-lambda-java-events:3.8.0',
+            'com.amazonaws:aws-java-sdk-cloudwatch:1.11.987',
+            'org.slf4j:slf4j-api:1.7.32',
+            'org.slf4j:slf4j-log4j12:1.7.32',
+            'com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.15.2',
+
+            // need this for our async clients
+            'software.amazon.awssdk:netty-nio-client:2.16.30',
+
+            // need this for logging
+            'org.apache.commons:commons-lang3:3.6'
+    )
     testImplementation(platform('org.junit:junit-bom:5.10.0'))
     testImplementation('org.junit.jupiter:junit-jupiter:5.8.1')
 }

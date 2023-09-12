@@ -1,0 +1,94 @@
+package com.deepgram.kvsdgintegrator;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.*;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+
+import java.io.IOException;
+import java.util.*;
+
+public record IntegratorArguments(
+        String contactId,
+        KvsStream kvsStream,
+        @JsonDeserialize(using = DgParamsDeserializer.class) Map<String, List<String>> dgParams) {
+    @JsonCreator
+    public IntegratorArguments(
+            @JsonProperty(required = true, value = "contactId") String contactId,
+            @JsonProperty(required = true, value = "kvsStream") KvsStream kvsStream,
+            @JsonProperty(required = true, value = "dgParams") Map<String, List<String>> dgParams
+    ) {
+        if (contactId == null || kvsStream == null || dgParams == null) {
+            throw new IllegalArgumentException("null values not allowed in JSON arguments");
+        }
+
+        this.contactId = contactId;
+        this.kvsStream = kvsStream;
+        this.dgParams = dgParams;
+    }
+
+    private static class DgParamsDeserializer extends JsonDeserializer<Map<String, List<String>>> {
+
+        @Override
+        public Map<String, List<String>> deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+            JsonNode node = p.readValueAsTree();
+            Map<String, List<String>> map = new HashMap<>();
+            Iterator<Map.Entry<String, JsonNode>> fields = node.fields();
+
+            while (fields.hasNext()) {
+                Map.Entry<String, JsonNode> field = fields.next();
+                String key = field.getKey();
+                JsonNode value = field.getValue();
+
+                if (value.isArray()) {
+                    int numArrayElements = value.size();
+                    if (numArrayElements == 0) {
+                        throw JsonMappingException.from(p, "dgParams cannot contain empty arrays");
+                    }
+
+                    Iterator<JsonNode> arrayElements = value.elements();
+                    List<String> stringsFound = new ArrayList<>();
+
+                    for (int i = 0; i < numArrayElements; i++) {
+                        JsonNode element = arrayElements.next();
+                        if (!element.isTextual()) {
+                            throw JsonMappingException.from(p, "arrays within dgParams can only contain strings");
+                        }
+                        stringsFound.add(element.asText());
+                    }
+
+                    map.put(key, stringsFound);
+                } else if (value.isTextual()) {
+                    map.put(key, List.of(value.asText()));
+                } else {
+                    throw JsonMappingException.from(p, "dgParams can only contain strings and arrays of strings");
+                }
+            }
+
+            return map;
+        }
+    }
+
+    public static IntegratorArguments fromJson(String json) throws JsonProcessingException {
+        ObjectMapper mapper = new ObjectMapper();
+        return mapper.readValue(json, IntegratorArguments.class);
+    }
+
+    public record KvsStream(String arn, int startFragmentNumber) {
+            @JsonCreator
+            public KvsStream(
+                    @JsonProperty(required = true, value = "arn") String arn,
+                    @JsonProperty(required = true, value = "startFragmentNumber") int startFragmentNumber
+            ) {
+                if (arn == null) {
+                    throw new IllegalArgumentException("Received null kvs stream arn");
+                }
+
+                this.arn = arn;
+                this.startFragmentNumber = startFragmentNumber;
+            }
+        }
+}
+

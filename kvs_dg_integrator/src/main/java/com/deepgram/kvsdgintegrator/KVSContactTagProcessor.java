@@ -3,9 +3,8 @@ package com.deepgram.kvsdgintegrator;
 import com.amazonaws.kinesisvideo.parser.utilities.FragmentMetadata;
 import com.amazonaws.kinesisvideo.parser.utilities.FragmentMetadataVisitor;
 import com.amazonaws.kinesisvideo.parser.utilities.MkvTag;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import java.util.Optional;
 
 /**
@@ -13,7 +12,7 @@ import java.util.Optional;
  * from what is expected.
  */
 public class KVSContactTagProcessor implements FragmentMetadataVisitor.MkvTagProcessor {
-    private static final Logger logger = LoggerFactory.getLogger(KVSContactTagProcessor.class);
+	private static final Logger logger = LogManager.getLogger(KVSContactTagProcessor.class);
 
     private final String contactId;
 

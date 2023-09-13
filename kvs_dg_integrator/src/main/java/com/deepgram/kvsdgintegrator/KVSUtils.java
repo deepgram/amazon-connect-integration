@@ -23,8 +23,8 @@ import com.amazonaws.services.kinesisvideo.model.GetMediaResult;
 import com.amazonaws.services.kinesisvideo.model.StartSelector;
 import com.amazonaws.services.kinesisvideo.model.StartSelectorType;
 import org.apache.commons.lang3.Validate;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.InputStream;
 import java.nio.ByteBuffer;
@@ -67,7 +67,7 @@ public final class KVSUtils {
         }
     }
 
-    private static final Logger logger = LoggerFactory.getLogger(KVSUtils.class);
+	private static final Logger logger = LogManager.getLogger(KVSUtils.class);
 
     /**
      * Fetches the next ByteBuffer of size 1024 bytes from the KVS stream by parsing the frame from the MkvElement

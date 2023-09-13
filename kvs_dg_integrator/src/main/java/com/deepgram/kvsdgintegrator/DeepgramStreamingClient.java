@@ -6,8 +6,8 @@ import org.reactivestreams.Publisher;
 import org.java_websocket.client.WebSocketClient;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import software.amazon.awssdk.services.transcribestreaming.model.AudioEvent;
 import software.amazon.awssdk.services.transcribestreaming.model.AudioStream;
 
@@ -22,11 +22,13 @@ import java.util.concurrent.CompletableFuture;
 public class DeepgramStreamingClient implements AutoCloseable {
 
 	private final URI deepgramStreamingUrl;
+	private final Map<String, String> deepgramHeaders;
 
-	private static final Logger logger = LoggerFactory.getLogger(DeepgramStreamingClient.class);
+	private static final Logger logger = LogManager.getLogger(DeepgramStreamingClient.class);
 
-	public DeepgramStreamingClient(Map<String, List<String>> dgParams) throws URISyntaxException {
+	public DeepgramStreamingClient(Map<String, List<String>> dgParams, String deepgramApiKey) throws URISyntaxException {
 		this.deepgramStreamingUrl = getDeepgramStreamingUrl(dgParams);
+		this.deepgramHeaders = getDeepgramHeaders(deepgramApiKey);
 	}
 
 	/**
@@ -61,6 +63,10 @@ public class DeepgramStreamingClient implements AutoCloseable {
 		return new URI(baseUri + "?" + queryString);
 	}
 
+	private Map<String, String> getDeepgramHeaders(String deepgramApiKey) {
+		return Map.of("Authorization", "Token " + deepgramApiKey);
+	}
+
 	public CompletableFuture<Void> startStreamingToDeepgram(final Publisher<AudioStream> publisher,
 															final String channel) {
 		Validate.notNull(publisher);
@@ -68,7 +74,7 @@ public class DeepgramStreamingClient implements AutoCloseable {
 
 		CompletableFuture<Void> future = new CompletableFuture<>();
 
-		final WebSocketClient wsClient = new WebSocketClient(deepgramStreamingUrl) {
+		final WebSocketClient wsClient = new WebSocketClient(deepgramStreamingUrl, deepgramHeaders) {
 			@Override
 			public void onOpen(ServerHandshake serverHandshake) {
 				registerSubscriber(this, publisher, future);

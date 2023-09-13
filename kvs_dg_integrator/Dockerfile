@@ -3,7 +3,7 @@ COPY --chown=gradle:gradle . /home/gradle/src
 WORKDIR /home/gradle/src
 RUN gradle test --info --no-daemon
 RUN gradle clean --no-daemon
-RUN gradle fatjar --no-daemon
+RUN gradle shadowJar --no-daemon
 
 FROM openjdk:17
 RUN mkdir /app

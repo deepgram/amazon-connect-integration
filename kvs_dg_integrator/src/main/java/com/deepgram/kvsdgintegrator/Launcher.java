@@ -21,8 +21,14 @@ public class Launcher {
 			return;
 		}
 
+		String deepgramApiKey = System.getenv("DEEPGRAM_API_KEY");
+		if (deepgramApiKey == null) {
+			System.out.println("ERROR: this task expects an environment variable DEEPGRAM_API_KEY");
+			return;
+		}
+
 		try {
-			KvsToDgStreamer.startKvsToDgStreaming(integratorArguments);
+			KvsToDgStreamer.startKvsToDgStreaming(integratorArguments, deepgramApiKey);
 		} catch (Exception e) {
 			System.out.println("ERROR: exception while attempting to stream audio: " + e);
 		}

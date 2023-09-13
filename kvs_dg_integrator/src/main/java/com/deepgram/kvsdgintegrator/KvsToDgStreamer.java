@@ -10,8 +10,8 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import software.amazon.awssdk.services.transcribestreaming.model.AudioStream;
 
 import java.io.FileNotFoundException;
@@ -49,29 +49,30 @@ import java.util.concurrent.TimeoutException;
  * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-public class KvsToDgStreamer implements RequestHandler<TranscriptionRequest, String> {
+public class KvsToDgStreamer implements RequestHandler<IntegratorArguments, String> {
 
 	private static final Regions REGION = Regions.fromName(System.getenv("APP_REGION"));
-	private static final String START_SELECTOR_TYPE = System.getenv("START_SELECTOR_TYPE");
-	private static final Logger logger = LoggerFactory.getLogger(KvsToDgStreamer.class);
+	private static final String START_SELECTOR_TYPE = "FRAGMENT_NUMBER";
+	private static final Logger logger = LogManager.getLogger(KvsToDgStreamer.class);
 	private static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
 
 	/**
-	 * Handler function for the Lambda
+	 * Handler function for when the integrator is being run as a Lambda. In production, the integrator should not be
+	 * run as a Lambda unless you're OK with it shutting down after 15 minutes.
 	 */
 	@Override
-	public String handleRequest(TranscriptionRequest request, Context context) {
-
+	public String handleRequest(IntegratorArguments request, Context context) {
 		logger.info("received request : " + request.toString());
 		logger.info("received context: " + context.toString());
 
+		String deepgramApiKey = System.getenv("DEEPGRAM_API_KEY");
+		if (deepgramApiKey == null) {
+			System.out.println("ERROR: this task expects an environment variable DEEPGRAM_API_KEY");
+			return "{ \"result\": \"Failed\" }";
+		}
+
 		try {
-			// validate the request
-			request.validate();
-
-//			startKvsToDgStreaming(request.getStreamARN(), request.getStartFragmentNum(), request.getConnectContactId(),
-//					request.getLanguageCode());
-
+			startKvsToDgStreaming(request, deepgramApiKey);
 			return "{ \"result\": \"Success\" }";
 
 		} catch (Exception e) {
@@ -80,7 +81,7 @@ public class KvsToDgStreamer implements RequestHandler<TranscriptionRequest, Str
 		}
 	}
 
-	public static void startKvsToDgStreaming(IntegratorArguments integratorArguments) throws Exception {
+	public static void startKvsToDgStreaming(IntegratorArguments integratorArguments, String deepgramApiKey) throws Exception {
 		String streamARN = integratorArguments.kvsStream().arn();
 		String startFragmentNum = integratorArguments.kvsStream().startFragmentNumber() + "";
 		String contactId = integratorArguments.contactId();
@@ -92,7 +93,7 @@ public class KvsToDgStreamer implements RequestHandler<TranscriptionRequest, Str
 		KVSStreamTrackObject kvsStreamTrackObjectToCustomer = getKVSStreamTrackObject(
 				streamName, startFragmentNum, KVSUtils.TrackName.AUDIO_TO_CUSTOMER.getName(), contactId);
 
-		try (DeepgramStreamingClient client = new DeepgramStreamingClient(integratorArguments.dgParams())) {
+		try (DeepgramStreamingClient client = new DeepgramStreamingClient(integratorArguments.dgParams(), deepgramApiKey)) {
 
 			logger.info("Calling Transcribe service..");
 			CompletableFuture<Void> fromCustomerResult = getStartStreamingTranscriptionFuture(

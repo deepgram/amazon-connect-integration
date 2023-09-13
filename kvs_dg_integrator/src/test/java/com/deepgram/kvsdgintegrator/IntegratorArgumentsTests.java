@@ -18,7 +18,7 @@ class IntegratorArgumentsTests {
                     "contactId": "4a573372-1f28-4e26-b97b-XXXXXXXXXXX",
                     "kvsStream": {
                         "arn": "arn:aws:kinesisvideo::eu-west-2:111111111111:stream/instance-alias-contact-ddddddd-bbbb-dddd-eeee-ffffffffffff/9999999999999",
-                        "startFragmentNumber": 100
+                        "startFragmentNumber": "100"
                     },
                     "dgParams": {
                         "model": "nova",
@@ -30,7 +30,7 @@ class IntegratorArgumentsTests {
                 "4a573372-1f28-4e26-b97b-XXXXXXXXXXX",
                 new IntegratorArguments.KvsStream(
                         "arn:aws:kinesisvideo::eu-west-2:111111111111:stream/instance-alias-contact-ddddddd-bbbb-dddd-eeee-ffffffffffff/9999999999999",
-                        100),
+                        "100"),
                 Map.of("model", List.of("nova"),
                         "tag", List.of("someTag1", "someTag2"),
                         "callback", List.of("https://example.com/4a573372-1f28-4e26-b97b-XXXXXXXXXXX"))
@@ -46,7 +46,7 @@ class IntegratorArgumentsTests {
                     "contactId": "4a573372-1f28-4e26-b97b-XXXXXXXXXXX",
                     "kvsStream": {
                         "arn": "arn:aws:kinesisvideo::eu-west-2:111111111111:stream/instance-alias-contact-ddddddd-bbbb-dddd-eeee-ffffffffffff/9999999999999",
-                        "startFragmentNumber": 100
+                        "startFragmentNumber": "100"
                     },
                     "dgParams": {
                         "model": "nova",
@@ -64,7 +64,7 @@ class IntegratorArgumentsTests {
                 {
                     "kvsStream": {
                         "arn": "arn:aws:kinesisvideo::eu-west-2:111111111111:stream/instance-alias-contact-ddddddd-bbbb-dddd-eeee-ffffffffffff/9999999999999",
-                        "startFragmentNumber": 100
+                        "startFragmentNumber": "100"
                     },
                     "dgParams": {
                         "model": "nova",
@@ -96,7 +96,7 @@ class IntegratorArgumentsTests {
                     "contactId": "4a573372-1f28-4e26-b97b-XXXXXXXXXXX",
                     "kvsStream": {
                         "arn": "arn:aws:kinesisvideo::eu-west-2:111111111111:stream/instance-alias-contact-ddddddd-bbbb-dddd-eeee-ffffffffffff/9999999999999",
-                        "startFragmentNumber": 100
+                        "startFragmentNumber": "100"
                     }
                 }""";
         assertThrows(Exception.class, () -> IntegratorArguments.fromJson(json));
@@ -109,7 +109,7 @@ class IntegratorArgumentsTests {
                     "contactId": null,
                     "kvsStream": {
                         "arn": "arn:aws:kinesisvideo::eu-west-2:111111111111:stream/instance-alias-contact-ddddddd-bbbb-dddd-eeee-ffffffffffff/9999999999999",
-                        "startFragmentNumber": 100
+                        "startFragmentNumber": "100"
                     },
                     "dgParams": {
                         "model": "nova",
@@ -142,7 +142,7 @@ class IntegratorArgumentsTests {
                     "contactId": "4a573372-1f28-4e26-b97b-XXXXXXXXXXX",
                     "kvsStream": {
                         "arn": "arn:aws:kinesisvideo::eu-west-2:111111111111:stream/instance-alias-contact-ddddddd-bbbb-dddd-eeee-ffffffffffff/9999999999999",
-                        "startFragmentNumber": 100
+                        "startFragmentNumber": "100"
                     },
                     "dgParams": null
                 }""";

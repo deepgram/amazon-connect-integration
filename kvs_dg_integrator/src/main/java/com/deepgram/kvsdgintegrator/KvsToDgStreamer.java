@@ -83,7 +83,7 @@ public class KvsToDgStreamer implements RequestHandler<IntegratorArguments, Stri
 
 	public static void startKvsToDgStreaming(IntegratorArguments integratorArguments, String deepgramApiKey) throws Exception {
 		String streamARN = integratorArguments.kvsStream().arn();
-		String startFragmentNum = integratorArguments.kvsStream().startFragmentNumber() + "";
+		String startFragmentNum = integratorArguments.kvsStream().startFragmentNumber();
 		String contactId = integratorArguments.contactId();
 
 		String streamName = streamARN.substring(streamARN.indexOf("/") + 1, streamARN.lastIndexOf("/"));

@@ -76,14 +76,17 @@ public record IntegratorArguments(
         return mapper.readValue(json, IntegratorArguments.class);
     }
 
-    public record KvsStream(String arn, int startFragmentNumber) {
+    public record KvsStream(String arn, String startFragmentNumber) {
             @JsonCreator
             public KvsStream(
                     @JsonProperty(required = true, value = "arn") String arn,
-                    @JsonProperty(required = true, value = "startFragmentNumber") int startFragmentNumber
+                    @JsonProperty(required = true, value = "startFragmentNumber") String startFragmentNumber
             ) {
                 if (arn == null) {
                     throw new IllegalArgumentException("Received null kvs stream arn");
+                }
+                if (startFragmentNumber == null) {
+                    throw new IllegalArgumentException("Received null start fragment number");
                 }
 
                 this.arn = arn;

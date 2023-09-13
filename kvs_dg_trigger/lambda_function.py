@@ -1,6 +1,7 @@
 from collections.abc import Mapping
+import json
 import os
-import requests
+import boto3
 
 
 def handler(event, context):
@@ -28,7 +29,7 @@ def handler(event, context):
         "contactId": contact_data["ContactId"],
         "kvsStream": {
             "arn": kvs_stream_info["StreamARN"],
-            "startFragmentNumber": int(kvs_stream_info["StartFragmentNumber"]),
+            "startFragmentNumber": kvs_stream_info["StartFragmentNumber"],
         },
         "dgParams": dg_params,
     }
@@ -110,22 +111,20 @@ def start_integrator_session(payload):
     """
     print(f"Attempting to start integrator session with payload {payload}")
 
-    kvs_dg_integrator_url = os.getenv("KVS_DG_INTEGRATOR_URL")
-    if not kvs_dg_integrator_url:
-        print("ERROR: Please set the KVS_DG_INTEGRATOR_URL environment variable")
+    kvs_dg_integrator = os.getenv("KVS_DG_INTEGRATOR")
+
+    if not kvs_dg_integrator:
+        print("ERROR: Please set the KVS_DG_INTEGRATOR environment variable")
         return False
 
-    url = kvs_dg_integrator_url + "/session-start"
-
-    try:
-        response = requests.post(url, json=payload)
-    except Exception as e:
-        print(f"ERROR: Exception while trying to hit {url}: {e}")
-        return False
-
-    if response.ok:
-        print("Session started successfully")
+    lambda_client = boto3.client("lambda")
+    response = lambda_client.invoke(
+        FunctionName=kvs_dg_integrator,
+        InvocationType="Event",
+        Payload=json.dumps(payload),
+    )
+    if response["StatusCode"] == 202:
         return True
     else:
-        print(f"ERROR: Integrator replied with {response.status_code}: {response.text}")
+        print(f"ERROR: Got error response from integrator: {response}")
         return False

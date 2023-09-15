@@ -1,21 +1,37 @@
 # KVS DG Trigger
 
-This is an AWS Lambda function that can be invoked during an Amazon Connect contact flow. Its job
-is to call the `/start-session` endpoint of DG KVS Integrator, passing along the relevant 
-information from the contact flow. 
+This is an AWS Lambda function that can be invoked during an Amazon Connect contact flow. Its job is to call KVS DG Integrator, passing along the relevant information from the contact flow. 
 
-## Build the image
+## Deploy the image
+Build the image and push it to ECR:
+```shell
+docker build --platform linux/amd64 -t 764576996850.dkr.ecr.us-east-1.amazonaws.com/kvs-dg-trigger:latest .
+docker push 764576996850.dkr.ecr.us-east-1.amazonaws.com/kvs-dg-trigger:latest
 ```
-docker build --platform linux/amd64 -t trigger-lambda:test .
+Then spin up the lambda with a CloudFormation template:
+```yaml
+  kvsDgTrigger:
+    Type: "AWS::Lambda::Function"
+    Properties:
+      Role: arn:aws:iam::764576996850:role/kvsDgTriggerRole
+      Timeout: 30
+      Environment:
+        Variables:
+          # Swap in the correct ARN
+          KVS_DG_INTEGRATOR: !GetAtt kvsDgIntegrator.Arn 
+      PackageType: "Image"
+      Code:
+        ImageUri: 764576996850.dkr.ecr.us-east-1.amazonaws.com/kvs-dg-trigger:latest
 ```
 
 ## Test the image locally
-```
-docker run -p 9000:8080 trigger-lambda:test
+```shell
+docker build --platform linux/amd64 -t kvs-dg-trigger:test .
+docker run -p 9000:8080 kvs-dg-trigger:test
 ./mock_invocation.sh
 ```
 
 ## Run unit tests
-```
+```shell
 python3 -m unittest lambda_function_test.py
 ```

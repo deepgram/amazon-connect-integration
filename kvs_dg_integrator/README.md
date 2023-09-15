@@ -8,13 +8,9 @@ For testing, it can be deployed to a Lambda function. In production, it
 should be deployed to Fargate or EC2 so that it can run for an unlimited 
 amount of time.
 
-## Build the image
-```
-docker build -t kvs-dg-integrator:test .
-```
+## Deploy to Lambda
 
-## Deploy the image to Lambda (testing only)
-First push the image to ECR:
+Build the image and push it to ECR:
 ```shell
 docker build -f Dockerfile.lambda --platform linux/amd64 -t 764576996850.dkr.ecr.us-east-1.amazonaws.com/kvs-dg-integrator-lambda:latest .
 docker push 764576996850.dkr.ecr.us-east-1.amazonaws.com/kvs-dg-integrator-lambda:latest

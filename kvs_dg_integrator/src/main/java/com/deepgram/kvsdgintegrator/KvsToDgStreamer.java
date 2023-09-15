@@ -96,10 +96,10 @@ public class KvsToDgStreamer implements RequestHandler<IntegratorArguments, Stri
 
 			logger.info("Calling Transcribe service..");
 			CompletableFuture<Void> fromCustomerResult = getStartStreamingTranscriptionFuture(
-					kvsStreamTrackObjectFromCustomer, contactId, client, KVSUtils.TrackName.AUDIO_FROM_CUSTOMER.getName());
+					kvsStreamTrackObjectFromCustomer, client, KVSUtils.TrackName.AUDIO_FROM_CUSTOMER.getName());
 
 			CompletableFuture<Void> toCustomerResult = getStartStreamingTranscriptionFuture(
-					kvsStreamTrackObjectToCustomer, contactId, client, KVSUtils.TrackName.AUDIO_TO_CUSTOMER.getName());
+					kvsStreamTrackObjectToCustomer, client, KVSUtils.TrackName.AUDIO_TO_CUSTOMER.getName());
 
 			// Synchronous wait for stream to close, and close client connection
 			// Timeout of 890 seconds because the Lambda function can be run for at most 15 mins (~890 secs)
@@ -131,17 +131,16 @@ public class KvsToDgStreamer implements RequestHandler<IntegratorArguments, Stri
 		Path saveAudioFilePath = Paths.get("/tmp", fileName);
 		FileOutputStream fileOutputStream = new FileOutputStream(saveAudioFilePath.toString());
 
-		return new KVSStreamTrackObject(kvsInputStream, streamingMkvReader, tagProcessor, fragmentVisitor, saveAudioFilePath, fileOutputStream, trackName);
+		return new KVSStreamTrackObject(streamingMkvReader, tagProcessor, fragmentVisitor, fileOutputStream, trackName);
 	}
 
 
 	private static CompletableFuture<Void> getStartStreamingTranscriptionFuture(KVSStreamTrackObject kvsStreamTrackObject,
-																				String contactId, DeepgramStreamingClient client,
+																				DeepgramStreamingClient client,
 																				String channel) {
 		return client.startStreamingToDeepgram(
 				new KVSAudioStreamPublisher(
 						kvsStreamTrackObject.getStreamingMkvReader(),
-						contactId,
 						kvsStreamTrackObject.getOutputStream(),
 						kvsStreamTrackObject.getTagProcessor(),
 						kvsStreamTrackObject.getFragmentVisitor(),
@@ -163,7 +162,6 @@ public class KvsToDgStreamer implements RequestHandler<IntegratorArguments, Stri
 	 */
 	private record KVSAudioStreamPublisher(
 			StreamingMkvReader streamingMkvReader,
-			String contactId,
 			OutputStream outputStream,
 			KVSContactTagProcessor tagProcessor,
 			FragmentMetadataVisitor fragmentVisitor,
@@ -171,7 +169,7 @@ public class KvsToDgStreamer implements RequestHandler<IntegratorArguments, Stri
 
 		@Override
 		public void subscribe(Subscriber<? super AudioStream> s) {
-			s.onSubscribe(new KVSByteToAudioEventSubscription(s, streamingMkvReader, contactId, outputStream, tagProcessor, fragmentVisitor, track));
+			s.onSubscribe(new KVSByteToAudioEventSubscription(s, streamingMkvReader, outputStream, tagProcessor, fragmentVisitor, track));
 		}
 	}
 }

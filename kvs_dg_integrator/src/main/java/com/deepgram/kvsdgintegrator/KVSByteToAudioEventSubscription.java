@@ -42,18 +42,16 @@ public class KVSByteToAudioEventSubscription implements Subscription {
 	private AtomicLong demand = new AtomicLong(0); // state container
 	private final Subscriber<? super AudioStream> subscriber;
 	private final StreamingMkvReader streamingMkvReader;
-	private String contactId;
 	private OutputStream outputStream;
 	private final KVSContactTagProcessor tagProcessor;
 	private final FragmentMetadataVisitor fragmentVisitor;
 	private final String track;
 
 	public KVSByteToAudioEventSubscription(Subscriber<? super AudioStream> s, StreamingMkvReader streamingMkvReader,
-										   String contactId, OutputStream outputStream, KVSContactTagProcessor tagProcessor,
+										   OutputStream outputStream, KVSContactTagProcessor tagProcessor,
 										   FragmentMetadataVisitor fragmentVisitor, String track) {
 		this.subscriber = Validate.notNull(s);
 		this.streamingMkvReader = Validate.notNull(streamingMkvReader);
-		this.contactId = Validate.notNull(contactId);
 		this.outputStream = Validate.notNull(outputStream);
 		this.tagProcessor = Validate.notNull(tagProcessor);
 		this.fragmentVisitor = Validate.notNull(fragmentVisitor);

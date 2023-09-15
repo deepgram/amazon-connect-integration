@@ -2,8 +2,6 @@ package com.deepgram.kvsdgintegrator;
 
 import com.amazonaws.kinesisvideo.parser.mkv.StreamingMkvReader;
 import com.amazonaws.kinesisvideo.parser.utilities.FragmentMetadataVisitor;
-import com.deepgram.kvsdgintegrator.KVSContactTagProcessor;
-import com.deepgram.kvsdgintegrator.KVSUtils;
 import org.apache.commons.lang3.Validate;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
@@ -74,7 +72,7 @@ public class KVSByteToAudioEventSubscription implements Subscription {
 			try {
 				while (demand.get() > 0) {
 					// return byteBufferDetails and consume this with an input stream then feed to output stream
-					ByteBuffer audioBuffer = KVSUtils.getByteBufferFromStream(streamingMkvReader, fragmentVisitor, tagProcessor, contactId, CHUNK_SIZE_IN_KB, track);
+					ByteBuffer audioBuffer = KVSUtils.getByteBufferFromStream(streamingMkvReader, fragmentVisitor, tagProcessor, CHUNK_SIZE_IN_KB, track);
 
 					if (audioBuffer.remaining() > 0) {
 

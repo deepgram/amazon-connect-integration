@@ -30,8 +30,6 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.*;
 
-import static com.amazonaws.util.StringUtils.isNullOrEmpty;
-
 /**
  * Utility class to interact with KVS streams
  *
@@ -56,7 +54,7 @@ public final class KVSUtils {
         AUDIO_FROM_CUSTOMER("AUDIO_FROM_CUSTOMER"),
         AUDIO_TO_CUSTOMER("AUDIO_TO_CUSTOMER");
 
-        private String name;
+        private final String name;
 
         TrackName(String name) {
             this.name = name;
@@ -72,18 +70,11 @@ public final class KVSUtils {
     /**
      * Fetches the next ByteBuffer of size 1024 bytes from the KVS stream by parsing the frame from the MkvElement
      * Each frame has a ByteBuffer having size 1024
-     *
-     * @param streamingMkvReader
-     * @param fragmentVisitor
-     * @param tagProcessor
-     * @param contactId
-     * @return
-     * @throws MkvElementVisitException
      */
     public static ByteBuffer getByteBufferFromStream(StreamingMkvReader streamingMkvReader,
                                                      FragmentMetadataVisitor fragmentVisitor,
                                                      KVSContactTagProcessor tagProcessor,
-                                                     String contactId, String track) throws MkvElementVisitException {
+                                                     String track) throws MkvElementVisitException {
         while (streamingMkvReader.mightHaveNext()) {
             Optional<MkvElement> mkvElementOptional = streamingMkvReader.nextIfAvailable();
             if (mkvElementOptional.isPresent()) {
@@ -118,26 +109,17 @@ public final class KVSUtils {
     /**
      * Fetches ByteBuffer of provided size from the KVS stream by repeatedly calling {@link KVSUtils#getByteBufferFromStream}
      * and concatenating the ByteBuffers to create a single chunk
-     *
-     * @param streamingMkvReader
-     * @param fragmentVisitor
-     * @param tagProcessor
-     * @param contactId
-     * @param chunkSizeInKB
-     * @return
-     * @throws MkvElementVisitException
      */
     public static ByteBuffer getByteBufferFromStream(StreamingMkvReader streamingMkvReader,
                                                      FragmentMetadataVisitor fragmentVisitor,
                                                      KVSContactTagProcessor tagProcessor,
-                                                     String contactId,
                                                      int chunkSizeInKB,
                                                      String track) throws MkvElementVisitException {
 
         List<ByteBuffer> byteBufferList = new ArrayList<ByteBuffer>();
 
         for (int i = 0; i < chunkSizeInKB; i++) {
-            ByteBuffer byteBuffer = KVSUtils.getByteBufferFromStream(streamingMkvReader, fragmentVisitor, tagProcessor, contactId, track);
+            ByteBuffer byteBuffer = KVSUtils.getByteBufferFromStream(streamingMkvReader, fragmentVisitor, tagProcessor, track);
             if (byteBuffer.remaining() > 0) {
                 byteBufferList.add(byteBuffer);
             } else {
@@ -167,24 +149,17 @@ public final class KVSUtils {
 
     /**
      * Makes a GetMedia call to KVS and retrieves the InputStream corresponding to the given streamName and startFragmentNum
-     *
-     * @param streamName
-     * @param region
-     * @param startFragmentNum
-     * @param awsCredentialsProvider
-     * @return
      */
     public static InputStream getInputStreamFromKVS(String streamName,
                                                     Regions region,
                                                     String startFragmentNum,
-                                                    AWSCredentialsProvider awsCredentialsProvider,
-                                                    String startSelectorType) {
+                                                    AWSCredentialsProvider awsCredentialsProvider) {
         Validate.notNull(streamName);
         Validate.notNull(region);
         Validate.notNull(startFragmentNum);
         Validate.notNull(awsCredentialsProvider);
 
-        AmazonKinesisVideo amazonKinesisVideo = (AmazonKinesisVideo) AmazonKinesisVideoClientBuilder.standard().build();
+        AmazonKinesisVideo amazonKinesisVideo = AmazonKinesisVideoClientBuilder.standard().build();
 
         String endPoint = amazonKinesisVideo.getDataEndpoint(new GetDataEndpointRequest()
                 .withAPIName(APIName.GET_MEDIA)
@@ -195,22 +170,10 @@ public final class KVSUtils {
                 .withCredentials(awsCredentialsProvider);
         AmazonKinesisVideoMedia amazonKinesisVideoMedia = amazonKinesisVideoMediaClientBuilder.build();
 
-        StartSelector startSelector;
-        startSelectorType = isNullOrEmpty(startSelectorType) ? "NOW" : startSelectorType;
-        switch (startSelectorType) {
-            case "FRAGMENT_NUMBER":
-                startSelector = new StartSelector()
-                        .withStartSelectorType(StartSelectorType.FRAGMENT_NUMBER)
-                        .withAfterFragmentNumber(startFragmentNum);
-                logger.info("StartSelector set to FRAGMENT_NUMBER: " + startFragmentNum);
-                break;
-            case "NOW":
-            default:
-                startSelector = new StartSelector()
-                        .withStartSelectorType(StartSelectorType.NOW);
-                logger.info("StartSelector set to NOW");
-                break;
-        }
+        StartSelector startSelector = new StartSelector()
+                .withStartSelectorType(StartSelectorType.FRAGMENT_NUMBER)
+                .withAfterFragmentNumber(startFragmentNum);
+        logger.info("StartSelector set to FRAGMENT_NUMBER: " + startFragmentNum);
 
         GetMediaResult getMediaResult = amazonKinesisVideoMedia.getMedia(new GetMediaRequest()
                 .withStreamName(streamName)

@@ -52,7 +52,6 @@ import java.util.concurrent.TimeoutException;
 public class KvsToDgStreamer implements RequestHandler<IntegratorArguments, String> {
 
 	private static final Regions REGION = Regions.fromName(System.getenv("APP_REGION"));
-	private static final String START_SELECTOR_TYPE = "FRAGMENT_NUMBER";
 	private static final Logger logger = LogManager.getLogger(KvsToDgStreamer.class);
 	private static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
 
@@ -99,9 +98,8 @@ public class KvsToDgStreamer implements RequestHandler<IntegratorArguments, Stri
 			CompletableFuture<Void> fromCustomerResult = getStartStreamingTranscriptionFuture(
 					kvsStreamTrackObjectFromCustomer, contactId, client, KVSUtils.TrackName.AUDIO_FROM_CUSTOMER.getName());
 
-			// TODO: Reenable this and decide how to mix channels
-//			CompletableFuture<Void> toCustomerResult = getStartStreamingTranscriptionFuture(
-//					kvsStreamTrackObjectToCustomer, contactId, client, KVSUtils.TrackName.AUDIO_TO_CUSTOMER.getName());
+			CompletableFuture<Void> toCustomerResult = getStartStreamingTranscriptionFuture(
+					kvsStreamTrackObjectToCustomer, contactId, client, KVSUtils.TrackName.AUDIO_TO_CUSTOMER.getName());
 
 			// Synchronous wait for stream to close, and close client connection
 			// Timeout of 890 seconds because the Lambda function can be run for at most 15 mins (~890 secs)
@@ -123,7 +121,7 @@ public class KvsToDgStreamer implements RequestHandler<IntegratorArguments, Stri
 	 */
 	private static KVSStreamTrackObject getKVSStreamTrackObject(String streamName, String startFragmentNum, String trackName,
 																String contactId) throws FileNotFoundException {
-		InputStream kvsInputStream = KVSUtils.getInputStreamFromKVS(streamName, REGION, startFragmentNum, getAWSCredentials(), START_SELECTOR_TYPE);
+		InputStream kvsInputStream = KVSUtils.getInputStreamFromKVS(streamName, REGION, startFragmentNum, getAWSCredentials());
 		StreamingMkvReader streamingMkvReader = StreamingMkvReader.createDefault(new InputStreamParserByteSource(kvsInputStream));
 
 		KVSContactTagProcessor tagProcessor = new KVSContactTagProcessor(contactId);

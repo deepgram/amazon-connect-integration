@@ -4,18 +4,16 @@ import com.amazonaws.kinesisvideo.parser.mkv.StreamingMkvReader;
 import com.amazonaws.kinesisvideo.parser.utilities.FragmentMetadataVisitor;
 
 import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.nio.file.Path;
 
-public class KVSStreamTrackObject {
+public class KvsStreamTrackObject {
     private StreamingMkvReader streamingMkvReader;
-    private KVSContactTagProcessor tagProcessor;
+    private KvsContactTagProcessor tagProcessor;
     private FragmentMetadataVisitor fragmentVisitor;
     private FileOutputStream outputStream;
     private String trackName;
 
-    public KVSStreamTrackObject(StreamingMkvReader streamingMkvReader,
-                                KVSContactTagProcessor tagProcessor, FragmentMetadataVisitor fragmentVisitor,
+    public KvsStreamTrackObject(StreamingMkvReader streamingMkvReader,
+                                KvsContactTagProcessor tagProcessor, FragmentMetadataVisitor fragmentVisitor,
                                 FileOutputStream outputStream, String trackName) {
         this.streamingMkvReader = streamingMkvReader;
         this.tagProcessor = tagProcessor;
@@ -28,7 +26,7 @@ public class KVSStreamTrackObject {
         return streamingMkvReader;
     }
 
-    public KVSContactTagProcessor getTagProcessor() {
+    public KvsContactTagProcessor getTagProcessor() {
         return tagProcessor;
     }
 

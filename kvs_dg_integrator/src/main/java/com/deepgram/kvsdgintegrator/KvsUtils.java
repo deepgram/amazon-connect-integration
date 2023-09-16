@@ -48,7 +48,7 @@ import java.util.*;
  * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-public final class KVSUtils {
+public final class KvsUtils {
 
     public enum TrackName {
         AUDIO_FROM_CUSTOMER("AUDIO_FROM_CUSTOMER"),
@@ -65,7 +65,7 @@ public final class KVSUtils {
         }
     }
 
-	private static final Logger logger = LogManager.getLogger(KVSUtils.class);
+    private static final Logger logger = LogManager.getLogger(KvsUtils.class);
 
     /**
      * Fetches the next ByteBuffer of size 1024 bytes from the KVS stream by parsing the frame from the MkvElement
@@ -73,7 +73,7 @@ public final class KVSUtils {
      */
     public static ByteBuffer getByteBufferFromStream(StreamingMkvReader streamingMkvReader,
                                                      FragmentMetadataVisitor fragmentVisitor,
-                                                     KVSContactTagProcessor tagProcessor,
+                                                     KvsContactTagProcessor tagProcessor,
                                                      String track) throws MkvElementVisitException {
         while (streamingMkvReader.mightHaveNext()) {
             Optional<MkvElement> mkvElementOptional = streamingMkvReader.nextIfAvailable();
@@ -107,19 +107,19 @@ public final class KVSUtils {
     }
 
     /**
-     * Fetches ByteBuffer of provided size from the KVS stream by repeatedly calling {@link KVSUtils#getByteBufferFromStream}
+     * Fetches ByteBuffer of provided size from the KVS stream by repeatedly calling {@link KvsUtils#getByteBufferFromStream}
      * and concatenating the ByteBuffers to create a single chunk
      */
     public static ByteBuffer getByteBufferFromStream(StreamingMkvReader streamingMkvReader,
                                                      FragmentMetadataVisitor fragmentVisitor,
-                                                     KVSContactTagProcessor tagProcessor,
+                                                     KvsContactTagProcessor tagProcessor,
                                                      int chunkSizeInKB,
                                                      String track) throws MkvElementVisitException {
 
         List<ByteBuffer> byteBufferList = new ArrayList<ByteBuffer>();
 
         for (int i = 0; i < chunkSizeInKB; i++) {
-            ByteBuffer byteBuffer = KVSUtils.getByteBufferFromStream(streamingMkvReader, fragmentVisitor, tagProcessor, track);
+            ByteBuffer byteBuffer = KvsUtils.getByteBufferFromStream(streamingMkvReader, fragmentVisitor, tagProcessor, track);
             if (byteBuffer.remaining() > 0) {
                 byteBufferList.add(byteBuffer);
             } else {

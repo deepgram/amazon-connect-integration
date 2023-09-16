@@ -87,19 +87,19 @@ public class KvsToDgStreamer implements RequestHandler<IntegratorArguments, Stri
 
 		String streamName = streamARN.substring(streamARN.indexOf("/") + 1, streamARN.lastIndexOf("/"));
 
-		KVSStreamTrackObject kvsStreamTrackObjectFromCustomer = getKVSStreamTrackObject(
-				streamName, startFragmentNum, KVSUtils.TrackName.AUDIO_FROM_CUSTOMER.getName(), contactId);
-		KVSStreamTrackObject kvsStreamTrackObjectToCustomer = getKVSStreamTrackObject(
-				streamName, startFragmentNum, KVSUtils.TrackName.AUDIO_TO_CUSTOMER.getName(), contactId);
+		KvsStreamTrackObject kvsStreamTrackObjectFromCustomer = getKVSStreamTrackObject(
+				streamName, startFragmentNum, KvsUtils.TrackName.AUDIO_FROM_CUSTOMER.getName(), contactId);
+		KvsStreamTrackObject kvsStreamTrackObjectToCustomer = getKVSStreamTrackObject(
+				streamName, startFragmentNum, KvsUtils.TrackName.AUDIO_TO_CUSTOMER.getName(), contactId);
 
 		try (DeepgramStreamingClient client = new DeepgramStreamingClient(integratorArguments.dgParams(), deepgramApiKey)) {
 
 			logger.info("Calling Transcribe service..");
 			CompletableFuture<Void> fromCustomerResult = getStartStreamingTranscriptionFuture(
-					kvsStreamTrackObjectFromCustomer, client, KVSUtils.TrackName.AUDIO_FROM_CUSTOMER.getName());
+					kvsStreamTrackObjectFromCustomer, client, KvsUtils.TrackName.AUDIO_FROM_CUSTOMER.getName());
 
 			CompletableFuture<Void> toCustomerResult = getStartStreamingTranscriptionFuture(
-					kvsStreamTrackObjectToCustomer, client, KVSUtils.TrackName.AUDIO_TO_CUSTOMER.getName());
+					kvsStreamTrackObjectToCustomer, client, KvsUtils.TrackName.AUDIO_TO_CUSTOMER.getName());
 
 			// Synchronous wait for stream to close, and close client connection
 			// Timeout of 890 seconds because the Lambda function can be run for at most 15 mins (~890 secs)
@@ -119,23 +119,23 @@ public class KvsToDgStreamer implements RequestHandler<IntegratorArguments, Stri
 	/**
 	 * Create all objects necessary for KVS streaming from each track
 	 */
-	private static KVSStreamTrackObject getKVSStreamTrackObject(String streamName, String startFragmentNum, String trackName,
+	private static KvsStreamTrackObject getKVSStreamTrackObject(String streamName, String startFragmentNum, String trackName,
 																String contactId) throws FileNotFoundException {
-		InputStream kvsInputStream = KVSUtils.getInputStreamFromKVS(streamName, REGION, startFragmentNum, getAWSCredentials());
+		InputStream kvsInputStream = KvsUtils.getInputStreamFromKVS(streamName, REGION, startFragmentNum, getAWSCredentials());
 		StreamingMkvReader streamingMkvReader = StreamingMkvReader.createDefault(new InputStreamParserByteSource(kvsInputStream));
 
-		KVSContactTagProcessor tagProcessor = new KVSContactTagProcessor(contactId);
+		KvsContactTagProcessor tagProcessor = new KvsContactTagProcessor(contactId);
 		FragmentMetadataVisitor fragmentVisitor = FragmentMetadataVisitor.create(Optional.of(tagProcessor));
 
 		String fileName = String.format("%s_%s_%s.raw", contactId, DATE_FORMAT.format(new Date()), trackName);
 		Path saveAudioFilePath = Paths.get("/tmp", fileName);
 		FileOutputStream fileOutputStream = new FileOutputStream(saveAudioFilePath.toString());
 
-		return new KVSStreamTrackObject(streamingMkvReader, tagProcessor, fragmentVisitor, fileOutputStream, trackName);
+		return new KvsStreamTrackObject(streamingMkvReader, tagProcessor, fragmentVisitor, fileOutputStream, trackName);
 	}
 
 
-	private static CompletableFuture<Void> getStartStreamingTranscriptionFuture(KVSStreamTrackObject kvsStreamTrackObject,
+	private static CompletableFuture<Void> getStartStreamingTranscriptionFuture(KvsStreamTrackObject kvsStreamTrackObject,
 																				DeepgramStreamingClient client,
 																				String channel) {
 		return client.startStreamingToDeepgram(
@@ -162,7 +162,7 @@ public class KvsToDgStreamer implements RequestHandler<IntegratorArguments, Stri
 	private record KvsStreamPublisher(
 			StreamingMkvReader streamingMkvReader,
 			OutputStream outputStream,
-			KVSContactTagProcessor tagProcessor,
+			KvsContactTagProcessor tagProcessor,
 			FragmentMetadataVisitor fragmentVisitor,
 			String track) implements Publisher<ByteBuffer> {
 

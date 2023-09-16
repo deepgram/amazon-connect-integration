@@ -40,12 +40,12 @@ public class KvsStreamSubscription implements Subscription {
 	private final Subscriber<? super ByteBuffer> subscriber;
 	private final StreamingMkvReader streamingMkvReader;
 	private OutputStream outputStream;
-	private final KVSContactTagProcessor tagProcessor;
+	private final KvsContactTagProcessor tagProcessor;
 	private final FragmentMetadataVisitor fragmentVisitor;
 	private final String track;
 
 	public KvsStreamSubscription(Subscriber<? super ByteBuffer> s, StreamingMkvReader streamingMkvReader,
-								 OutputStream outputStream, KVSContactTagProcessor tagProcessor,
+								 OutputStream outputStream, KvsContactTagProcessor tagProcessor,
 								 FragmentMetadataVisitor fragmentVisitor, String track) {
 		this.subscriber = Validate.notNull(s);
 		this.streamingMkvReader = Validate.notNull(streamingMkvReader);
@@ -67,7 +67,7 @@ public class KvsStreamSubscription implements Subscription {
 			try {
 				while (demand.get() > 0) {
 					// return byteBufferDetails and consume this with an input stream then feed to output stream
-					ByteBuffer audioBuffer = KVSUtils.getByteBufferFromStream(streamingMkvReader, fragmentVisitor, tagProcessor, CHUNK_SIZE_IN_KB, track);
+					ByteBuffer audioBuffer = KvsUtils.getByteBufferFromStream(streamingMkvReader, fragmentVisitor, tagProcessor, CHUNK_SIZE_IN_KB, track);
 
 					if (audioBuffer.remaining() > 0) {
 						subscriber.onNext(audioBuffer);

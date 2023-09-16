@@ -11,15 +11,15 @@ import java.util.Optional;
  * An MkvTagProcessor that will ensure that we are only reading until end of stream OR the contact id changes
  * from what is expected.
  */
-public class KVSContactTagProcessor implements FragmentMetadataVisitor.MkvTagProcessor {
-	private static final Logger logger = LogManager.getLogger(KVSContactTagProcessor.class);
+public class KvsContactTagProcessor implements FragmentMetadataVisitor.MkvTagProcessor {
+    private static final Logger logger = LogManager.getLogger(KvsContactTagProcessor.class);
 
     private final String contactId;
 
     private boolean sameContact = true;
     private boolean stopStreaming = false;
 
-    public KVSContactTagProcessor(String contactId) {
+    public KvsContactTagProcessor(String contactId) {
         this.contactId = contactId;
     }
 

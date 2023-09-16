@@ -5,9 +5,6 @@ import com.amazonaws.kinesisvideo.parser.utilities.FragmentMetadataVisitor;
 import org.apache.commons.lang3.Validate;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
-import software.amazon.awssdk.core.SdkBytes;
-import software.amazon.awssdk.services.transcribestreaming.model.AudioEvent;
-import software.amazon.awssdk.services.transcribestreaming.model.AudioStream;
 
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
@@ -35,21 +32,21 @@ import java.util.concurrent.atomic.AtomicLong;
  * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-public class KVSByteToAudioEventSubscription implements Subscription {
+public class KvsStreamSubscription implements Subscription {
 
 	private static final int CHUNK_SIZE_IN_KB = 4;
 	private ExecutorService executor = Executors.newFixedThreadPool(1); // Change nThreads here!! used in SubmissionPublisher not subscription
 	private AtomicLong demand = new AtomicLong(0); // state container
-	private final Subscriber<? super AudioStream> subscriber;
+	private final Subscriber<? super ByteBuffer> subscriber;
 	private final StreamingMkvReader streamingMkvReader;
 	private OutputStream outputStream;
 	private final KVSContactTagProcessor tagProcessor;
 	private final FragmentMetadataVisitor fragmentVisitor;
 	private final String track;
 
-	public KVSByteToAudioEventSubscription(Subscriber<? super AudioStream> s, StreamingMkvReader streamingMkvReader,
-										   OutputStream outputStream, KVSContactTagProcessor tagProcessor,
-										   FragmentMetadataVisitor fragmentVisitor, String track) {
+	public KvsStreamSubscription(Subscriber<? super ByteBuffer> s, StreamingMkvReader streamingMkvReader,
+								 OutputStream outputStream, KVSContactTagProcessor tagProcessor,
+								 FragmentMetadataVisitor fragmentVisitor, String track) {
 		this.subscriber = Validate.notNull(s);
 		this.streamingMkvReader = Validate.notNull(streamingMkvReader);
 		this.outputStream = Validate.notNull(outputStream);
@@ -73,9 +70,7 @@ public class KVSByteToAudioEventSubscription implements Subscription {
 					ByteBuffer audioBuffer = KVSUtils.getByteBufferFromStream(streamingMkvReader, fragmentVisitor, tagProcessor, CHUNK_SIZE_IN_KB, track);
 
 					if (audioBuffer.remaining() > 0) {
-
-						AudioEvent audioEvent = audioEventFromBuffer(audioBuffer);
-						subscriber.onNext(audioEvent);
+						subscriber.onNext(audioBuffer);
 
 						//Write audioBytes to a temporary file as they are received from the stream
 						byte[] audioBytes = new byte[audioBuffer.remaining()];
@@ -97,11 +92,5 @@ public class KVSByteToAudioEventSubscription implements Subscription {
 	@Override
 	public void cancel() {
 		executor.shutdown();
-	}
-
-	private AudioEvent audioEventFromBuffer(ByteBuffer bb) {
-		return AudioEvent.builder()
-				.audioChunk(SdkBytes.fromByteBuffer(bb))
-				.build();
 	}
 }

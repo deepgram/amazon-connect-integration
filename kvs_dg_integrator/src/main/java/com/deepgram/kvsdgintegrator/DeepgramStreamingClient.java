@@ -1,19 +1,18 @@
 package com.deepgram.kvsdgintegrator;
 
 import org.apache.commons.lang3.Validate;
-import org.java_websocket.handshake.ServerHandshake;
-import org.reactivestreams.Publisher;
-import org.java_websocket.client.WebSocketClient;
-import org.reactivestreams.Subscriber;
-import org.reactivestreams.Subscription;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import software.amazon.awssdk.services.transcribestreaming.model.AudioEvent;
-import software.amazon.awssdk.services.transcribestreaming.model.AudioStream;
+import org.java_websocket.client.WebSocketClient;
+import org.java_websocket.handshake.ServerHandshake;
+import org.reactivestreams.Publisher;
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
 
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLEncoder;
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
@@ -67,7 +66,7 @@ public class DeepgramStreamingClient implements AutoCloseable {
 		return Map.of("Authorization", "Token " + deepgramApiKey);
 	}
 
-	public CompletableFuture<Void> startStreamingToDeepgram(final Publisher<AudioStream> publisher,
+	public CompletableFuture<Void> startStreamingToDeepgram(final Publisher<ByteBuffer> publisher,
 															final String channel) {
 		Validate.notNull(publisher);
 		Validate.notNull(channel);
@@ -101,22 +100,17 @@ public class DeepgramStreamingClient implements AutoCloseable {
 
 	private void registerSubscriber(
 			final WebSocketClient client,
-			final Publisher<AudioStream> publisher,
+			final Publisher<ByteBuffer> publisher,
 			final CompletableFuture<Void> future) {
-		publisher.subscribe(new Subscriber<AudioStream>() {
+		publisher.subscribe(new Subscriber<>() {
 			@Override
 			public void onSubscribe(Subscription subscription) {
 				subscription.request(Long.MAX_VALUE);
 			}
 
 			@Override
-			public void onNext(AudioStream audioStream) {
-				if (!(audioStream instanceof AudioEvent audioEvent)) {
-					logger.warn("Received AudioStream that was not an AudioEvent. Ignoring it.");
-					return;
-				}
-
-				client.send(audioEvent.audioChunk().asByteBuffer());
+			public void onNext(ByteBuffer audioBytes) {
+				client.send(audioBytes);
 			}
 
 			@Override

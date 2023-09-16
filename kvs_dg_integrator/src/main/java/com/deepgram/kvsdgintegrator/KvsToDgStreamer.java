@@ -8,16 +8,16 @@ import com.amazonaws.kinesisvideo.parser.utilities.FragmentMetadataVisitor;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
-import org.reactivestreams.Publisher;
-import org.reactivestreams.Subscriber;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import software.amazon.awssdk.services.transcribestreaming.model.AudioStream;
+import org.reactivestreams.Publisher;
+import org.reactivestreams.Subscriber;
 
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.DateFormat;
@@ -139,7 +139,7 @@ public class KvsToDgStreamer implements RequestHandler<IntegratorArguments, Stri
 																				DeepgramStreamingClient client,
 																				String channel) {
 		return client.startStreamingToDeepgram(
-				new KVSAudioStreamPublisher(
+				new KvsStreamPublisher(
 						kvsStreamTrackObject.getStreamingMkvReader(),
 						kvsStreamTrackObject.getOutputStream(),
 						kvsStreamTrackObject.getTagProcessor(),
@@ -157,19 +157,18 @@ public class KvsToDgStreamer implements RequestHandler<IntegratorArguments, Stri
 	}
 
 	/**
-	 * KVSAudioStreamPublisher implements audio stream publisher.
-	 * It emits audio events from a KVS stream asynchronously in a separate thread
+	 * Emits audio events from a KVS stream asynchronously in a separate thread
 	 */
-	private record KVSAudioStreamPublisher(
+	private record KvsStreamPublisher(
 			StreamingMkvReader streamingMkvReader,
 			OutputStream outputStream,
 			KVSContactTagProcessor tagProcessor,
 			FragmentMetadataVisitor fragmentVisitor,
-			String track) implements Publisher<AudioStream> {
+			String track) implements Publisher<ByteBuffer> {
 
 		@Override
-		public void subscribe(Subscriber<? super AudioStream> s) {
-			s.onSubscribe(new KVSByteToAudioEventSubscription(s, streamingMkvReader, outputStream, tagProcessor, fragmentVisitor, track));
+		public void subscribe(Subscriber<? super ByteBuffer> s) {
+			s.onSubscribe(new KvsStreamSubscription(s, streamingMkvReader, outputStream, tagProcessor, fragmentVisitor, track));
 		}
 	}
 }

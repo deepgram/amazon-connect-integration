@@ -78,19 +78,19 @@ public class KvsToDgStreamer implements RequestHandler<IntegratorArguments, Stri
 
 		String streamName = streamARN.substring(streamARN.indexOf("/") + 1, streamARN.lastIndexOf("/"));
 
-		KvsStreamTrackObject kvsStreamTrackObjectFromCustomer = getKVSStreamTrackObject(
+		KvsStreamTrack kvsStreamTrackFromCustomer = getKvsStreamTrack(
 				streamName, startFragmentNum, KvsUtils.TrackName.AUDIO_FROM_CUSTOMER.getName(), contactId);
-		KvsStreamTrackObject kvsStreamTrackObjectToCustomer = getKVSStreamTrackObject(
+		KvsStreamTrack kvsStreamTrackToCustomer = getKvsStreamTrack(
 				streamName, startFragmentNum, KvsUtils.TrackName.AUDIO_TO_CUSTOMER.getName(), contactId);
 
 		try (DeepgramStreamingClient client = new DeepgramStreamingClient(integratorArguments.dgParams(), deepgramApiKey)) {
 
 			logger.info("Calling Transcribe service..");
 			CompletableFuture<Void> fromCustomerResult = getStreamToDeepgramFuture(
-					kvsStreamTrackObjectFromCustomer, client, KvsUtils.TrackName.AUDIO_FROM_CUSTOMER.getName());
+					kvsStreamTrackFromCustomer, client, KvsUtils.TrackName.AUDIO_FROM_CUSTOMER.getName());
 
 			CompletableFuture<Void> toCustomerResult = getStreamToDeepgramFuture(
-					kvsStreamTrackObjectToCustomer, client, KvsUtils.TrackName.AUDIO_TO_CUSTOMER.getName());
+					kvsStreamTrackToCustomer, client, KvsUtils.TrackName.AUDIO_TO_CUSTOMER.getName());
 
 			// Synchronous wait for stream to close, and close client connection
 			// Timeout of 890 seconds because the Lambda function can be run for at most 15 mins (~890 secs)
@@ -110,7 +110,7 @@ public class KvsToDgStreamer implements RequestHandler<IntegratorArguments, Stri
 	/**
 	 * Create all objects necessary for KVS streaming from each track
 	 */
-	private static KvsStreamTrackObject getKVSStreamTrackObject(String streamName, String startFragmentNum, String trackName,
+	private static KvsStreamTrack getKvsStreamTrack(String streamName, String startFragmentNum, String trackName,
 																String contactId) {
 		InputStream kvsInputStream = KvsUtils.getInputStreamFromKVS(streamName, REGION, startFragmentNum, getAWSCredentials());
 		StreamingMkvReader streamingMkvReader = StreamingMkvReader.createDefault(new InputStreamParserByteSource(kvsInputStream));
@@ -118,18 +118,14 @@ public class KvsToDgStreamer implements RequestHandler<IntegratorArguments, Stri
 		KvsContactTagProcessor tagProcessor = new KvsContactTagProcessor(contactId);
 		FragmentMetadataVisitor fragmentVisitor = FragmentMetadataVisitor.create(Optional.of(tagProcessor));
 
-		return new KvsStreamTrackObject(streamingMkvReader, tagProcessor, fragmentVisitor, trackName);
+		return new KvsStreamTrack(streamingMkvReader, tagProcessor, fragmentVisitor, trackName);
 	}
 
-	private static CompletableFuture<Void> getStreamToDeepgramFuture(KvsStreamTrackObject kvsStreamTrackObject,
+	private static CompletableFuture<Void> getStreamToDeepgramFuture(KvsStreamTrack kvsStreamTrack,
 																				DeepgramStreamingClient client,
 																				String channel) {
 		return client.startStreamingToDeepgram(
-				new KvsStreamPublisher(
-						kvsStreamTrackObject.getStreamingMkvReader(),
-						kvsStreamTrackObject.getTagProcessor(),
-						kvsStreamTrackObject.getFragmentVisitor(),
-						kvsStreamTrackObject.getTrackName()),
+				new KvsStreamPublisher(kvsStreamTrack),
 				channel
 		);
 	}
@@ -144,15 +140,11 @@ public class KvsToDgStreamer implements RequestHandler<IntegratorArguments, Stri
 	/**
 	 * Emits audio events from a KVS stream asynchronously in a separate thread
 	 */
-	private record KvsStreamPublisher(
-			StreamingMkvReader streamingMkvReader,
-			KvsContactTagProcessor tagProcessor,
-			FragmentMetadataVisitor fragmentVisitor,
-			String track) implements Publisher<ByteBuffer> {
+	private record KvsStreamPublisher(KvsStreamTrack kvsStreamTrack) implements Publisher<ByteBuffer> {
 
 		@Override
 		public void subscribe(Subscriber<? super ByteBuffer> s) {
-			s.onSubscribe(new KvsStreamSubscription(s, streamingMkvReader, tagProcessor, fragmentVisitor, track));
+			s.onSubscribe(new KvsStreamSubscription(s, kvsStreamTrack));
 		}
 	}
 }

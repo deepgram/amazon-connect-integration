@@ -1,7 +1,5 @@
 package com.deepgram.kvsdgintegrator;
 
-import com.amazonaws.kinesisvideo.parser.mkv.StreamingMkvReader;
-import com.amazonaws.kinesisvideo.parser.utilities.FragmentMetadataVisitor;
 import org.apache.commons.lang3.Validate;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
@@ -34,22 +32,14 @@ import java.util.concurrent.atomic.AtomicLong;
 public class KvsStreamSubscription implements Subscription {
 
 	private static final int CHUNK_SIZE_IN_KB = 4;
-	private ExecutorService executor = Executors.newFixedThreadPool(1); // Change nThreads here!! used in SubmissionPublisher not subscription
-	private AtomicLong demand = new AtomicLong(0); // state container
+	private final ExecutorService executor = Executors.newFixedThreadPool(1); // Change nThreads here!! used in SubmissionPublisher not subscription
+	private final AtomicLong demand = new AtomicLong(0); // state container
 	private final Subscriber<? super ByteBuffer> subscriber;
-	private final StreamingMkvReader streamingMkvReader;
-	private final KvsContactTagProcessor tagProcessor;
-	private final FragmentMetadataVisitor fragmentVisitor;
-	private final String track;
+	private final KvsStreamTrack kvsStreamTrack;
 
-	public KvsStreamSubscription(Subscriber<? super ByteBuffer> s, StreamingMkvReader streamingMkvReader,
-								 KvsContactTagProcessor tagProcessor,
-								 FragmentMetadataVisitor fragmentVisitor, String track) {
+	public KvsStreamSubscription(Subscriber<? super ByteBuffer> s, KvsStreamTrack kvsStreamTrack) {
 		this.subscriber = Validate.notNull(s);
-		this.streamingMkvReader = Validate.notNull(streamingMkvReader);
-		this.tagProcessor = Validate.notNull(tagProcessor);
-		this.fragmentVisitor = Validate.notNull(fragmentVisitor);
-		this.track = Validate.notNull(track);
+		this.kvsStreamTrack = Validate.notNull(kvsStreamTrack);
 	}
 
 	@Override
@@ -64,7 +54,7 @@ public class KvsStreamSubscription implements Subscription {
 			try {
 				while (demand.get() > 0) {
 					// return byteBufferDetails and consume this with an input stream then feed to output stream
-					ByteBuffer audioBuffer = KvsUtils.getByteBufferFromStream(streamingMkvReader, fragmentVisitor, tagProcessor, CHUNK_SIZE_IN_KB, track);
+					ByteBuffer audioBuffer = KvsUtils.getByteBufferFromStream(kvsStreamTrack, CHUNK_SIZE_IN_KB);
 
 					if (audioBuffer.remaining() > 0) {
 						subscriber.onNext(audioBuffer);

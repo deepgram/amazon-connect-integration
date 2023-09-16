@@ -71,10 +71,12 @@ public final class KvsUtils {
      * Fetches the next ByteBuffer of size 1024 bytes from the KVS stream by parsing the frame from the MkvElement
      * Each frame has a ByteBuffer having size 1024
      */
-    public static ByteBuffer getByteBufferFromStream(StreamingMkvReader streamingMkvReader,
-                                                     FragmentMetadataVisitor fragmentVisitor,
-                                                     KvsContactTagProcessor tagProcessor,
-                                                     String track) throws MkvElementVisitException {
+    public static ByteBuffer getByteBufferFromStream(KvsStreamTrack kvsStreamTrack) throws MkvElementVisitException {
+        StreamingMkvReader streamingMkvReader = kvsStreamTrack.streamingMkvReader();
+        KvsContactTagProcessor tagProcessor = kvsStreamTrack.tagProcessor();
+        FragmentMetadataVisitor fragmentVisitor = kvsStreamTrack.fragmentVisitor();
+        String trackName = kvsStreamTrack.trackName();
+
         while (streamingMkvReader.mightHaveNext()) {
             Optional<MkvElement> mkvElementOptional = streamingMkvReader.nextIfAvailable();
             if (mkvElementOptional.isPresent()) {
@@ -91,9 +93,9 @@ public final class KvsUtils {
 
                     long trackNumber = frame.getTrackNumber();
                     MkvTrackMetadata metadata = fragmentVisitor.getMkvTrackMetadata(trackNumber);
-                    if (track.equals(metadata.getTrackName())) {
+                    if (trackName.equals(metadata.getTrackName())) {
                         return audioBuffer;
-                    } else if ("Track_audio/L16".equals(metadata.getTrackName()) && TrackName.AUDIO_FROM_CUSTOMER.getName().equals(track)) {
+                    } else if ("Track_audio/L16".equals(metadata.getTrackName()) && TrackName.AUDIO_FROM_CUSTOMER.getName().equals(trackName)) {
                         // backwards compatibility
                         return audioBuffer;
                     }
@@ -110,16 +112,15 @@ public final class KvsUtils {
      * Fetches ByteBuffer of provided size from the KVS stream by repeatedly calling {@link KvsUtils#getByteBufferFromStream}
      * and concatenating the ByteBuffers to create a single chunk
      */
-    public static ByteBuffer getByteBufferFromStream(StreamingMkvReader streamingMkvReader,
-                                                     FragmentMetadataVisitor fragmentVisitor,
-                                                     KvsContactTagProcessor tagProcessor,
-                                                     int chunkSizeInKB,
-                                                     String track) throws MkvElementVisitException {
+    public static ByteBuffer getByteBufferFromStream(
+            KvsStreamTrack kvsStreamTrack,
+            int chunkSizeInKB
+    ) throws MkvElementVisitException {
 
         List<ByteBuffer> byteBufferList = new ArrayList<ByteBuffer>();
 
         for (int i = 0; i < chunkSizeInKB; i++) {
-            ByteBuffer byteBuffer = KvsUtils.getByteBufferFromStream(streamingMkvReader, fragmentVisitor, tagProcessor, track);
+            ByteBuffer byteBuffer = KvsUtils.getByteBufferFromStream(kvsStreamTrack);
             if (byteBuffer.remaining() > 0) {
                 byteBufferList.add(byteBuffer);
             } else {

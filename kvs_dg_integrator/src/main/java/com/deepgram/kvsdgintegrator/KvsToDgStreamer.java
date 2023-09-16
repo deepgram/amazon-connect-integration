@@ -86,10 +86,10 @@ public class KvsToDgStreamer implements RequestHandler<IntegratorArguments, Stri
 		try (DeepgramStreamingClient client = new DeepgramStreamingClient(integratorArguments.dgParams(), deepgramApiKey)) {
 
 			logger.info("Calling Transcribe service..");
-			CompletableFuture<Void> fromCustomerResult = getStartStreamingTranscriptionFuture(
+			CompletableFuture<Void> fromCustomerResult = getStreamToDeepgramFuture(
 					kvsStreamTrackObjectFromCustomer, client, KvsUtils.TrackName.AUDIO_FROM_CUSTOMER.getName());
 
-			CompletableFuture<Void> toCustomerResult = getStartStreamingTranscriptionFuture(
+			CompletableFuture<Void> toCustomerResult = getStreamToDeepgramFuture(
 					kvsStreamTrackObjectToCustomer, client, KvsUtils.TrackName.AUDIO_TO_CUSTOMER.getName());
 
 			// Synchronous wait for stream to close, and close client connection
@@ -121,8 +121,7 @@ public class KvsToDgStreamer implements RequestHandler<IntegratorArguments, Stri
 		return new KvsStreamTrackObject(streamingMkvReader, tagProcessor, fragmentVisitor, trackName);
 	}
 
-
-	private static CompletableFuture<Void> getStartStreamingTranscriptionFuture(KvsStreamTrackObject kvsStreamTrackObject,
+	private static CompletableFuture<Void> getStreamToDeepgramFuture(KvsStreamTrackObject kvsStreamTrackObject,
 																				DeepgramStreamingClient client,
 																				String channel) {
 		return client.startStreamingToDeepgram(

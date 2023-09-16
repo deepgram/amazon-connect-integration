@@ -13,16 +13,8 @@ import org.apache.logging.log4j.Logger;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.nio.ByteBuffer;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -53,7 +45,6 @@ public class KvsToDgStreamer implements RequestHandler<IntegratorArguments, Stri
 
 	private static final Regions REGION = Regions.fromName(System.getenv("APP_REGION"));
 	private static final Logger logger = LogManager.getLogger(KvsToDgStreamer.class);
-	private static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
 
 	/**
 	 * Handler function for when the integrator is being run as a Lambda. In production, the integrator should not be
@@ -120,18 +111,14 @@ public class KvsToDgStreamer implements RequestHandler<IntegratorArguments, Stri
 	 * Create all objects necessary for KVS streaming from each track
 	 */
 	private static KvsStreamTrackObject getKVSStreamTrackObject(String streamName, String startFragmentNum, String trackName,
-																String contactId) throws FileNotFoundException {
+																String contactId) {
 		InputStream kvsInputStream = KvsUtils.getInputStreamFromKVS(streamName, REGION, startFragmentNum, getAWSCredentials());
 		StreamingMkvReader streamingMkvReader = StreamingMkvReader.createDefault(new InputStreamParserByteSource(kvsInputStream));
 
 		KvsContactTagProcessor tagProcessor = new KvsContactTagProcessor(contactId);
 		FragmentMetadataVisitor fragmentVisitor = FragmentMetadataVisitor.create(Optional.of(tagProcessor));
 
-		String fileName = String.format("%s_%s_%s.raw", contactId, DATE_FORMAT.format(new Date()), trackName);
-		Path saveAudioFilePath = Paths.get("/tmp", fileName);
-		FileOutputStream fileOutputStream = new FileOutputStream(saveAudioFilePath.toString());
-
-		return new KvsStreamTrackObject(streamingMkvReader, tagProcessor, fragmentVisitor, fileOutputStream, trackName);
+		return new KvsStreamTrackObject(streamingMkvReader, tagProcessor, fragmentVisitor, trackName);
 	}
 
 
@@ -141,7 +128,6 @@ public class KvsToDgStreamer implements RequestHandler<IntegratorArguments, Stri
 		return client.startStreamingToDeepgram(
 				new KvsStreamPublisher(
 						kvsStreamTrackObject.getStreamingMkvReader(),
-						kvsStreamTrackObject.getOutputStream(),
 						kvsStreamTrackObject.getTagProcessor(),
 						kvsStreamTrackObject.getFragmentVisitor(),
 						kvsStreamTrackObject.getTrackName()),
@@ -161,14 +147,13 @@ public class KvsToDgStreamer implements RequestHandler<IntegratorArguments, Stri
 	 */
 	private record KvsStreamPublisher(
 			StreamingMkvReader streamingMkvReader,
-			OutputStream outputStream,
 			KvsContactTagProcessor tagProcessor,
 			FragmentMetadataVisitor fragmentVisitor,
 			String track) implements Publisher<ByteBuffer> {
 
 		@Override
 		public void subscribe(Subscriber<? super ByteBuffer> s) {
-			s.onSubscribe(new KvsStreamSubscription(s, streamingMkvReader, outputStream, tagProcessor, fragmentVisitor, track));
+			s.onSubscribe(new KvsStreamSubscription(s, streamingMkvReader, tagProcessor, fragmentVisitor, track));
 		}
 	}
 }

@@ -6,7 +6,6 @@ import org.apache.commons.lang3.Validate;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 
-import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -39,17 +38,15 @@ public class KvsStreamSubscription implements Subscription {
 	private AtomicLong demand = new AtomicLong(0); // state container
 	private final Subscriber<? super ByteBuffer> subscriber;
 	private final StreamingMkvReader streamingMkvReader;
-	private OutputStream outputStream;
 	private final KvsContactTagProcessor tagProcessor;
 	private final FragmentMetadataVisitor fragmentVisitor;
 	private final String track;
 
 	public KvsStreamSubscription(Subscriber<? super ByteBuffer> s, StreamingMkvReader streamingMkvReader,
-								 OutputStream outputStream, KvsContactTagProcessor tagProcessor,
+								 KvsContactTagProcessor tagProcessor,
 								 FragmentMetadataVisitor fragmentVisitor, String track) {
 		this.subscriber = Validate.notNull(s);
 		this.streamingMkvReader = Validate.notNull(streamingMkvReader);
-		this.outputStream = Validate.notNull(outputStream);
 		this.tagProcessor = Validate.notNull(tagProcessor);
 		this.fragmentVisitor = Validate.notNull(fragmentVisitor);
 		this.track = Validate.notNull(track);
@@ -71,12 +68,6 @@ public class KvsStreamSubscription implements Subscription {
 
 					if (audioBuffer.remaining() > 0) {
 						subscriber.onNext(audioBuffer);
-
-						//Write audioBytes to a temporary file as they are received from the stream
-						byte[] audioBytes = new byte[audioBuffer.remaining()];
-						audioBuffer.get(audioBytes);
-						outputStream.write(audioBytes);
-
 					} else {
 						subscriber.onComplete();
 						break;

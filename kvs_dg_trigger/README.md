@@ -5,8 +5,9 @@ This is an AWS Lambda function that can be invoked during an Amazon Connect cont
 ## Deploy the image
 Build the image and push it to ECR:
 ```shell
-docker build --platform linux/amd64 -t 764576996850.dkr.ecr.us-east-1.amazonaws.com/kvs-dg-trigger:latest .
-docker push 764576996850.dkr.ecr.us-east-1.amazonaws.com/kvs-dg-trigger:latest
+docker build --platform linux/amd64 -t 764576996850.dkr.ecr.us-east-1.amazonaws.com/kvs-dg-trigger:latest . \
+&& aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 764576996850.dkr.ecr.us-east-1.amazonaws.com \
+&& docker push 764576996850.dkr.ecr.us-east-1.amazonaws.com/kvs-dg-trigger:latest
 ```
 Then spin up the lambda with a CloudFormation template:
 ```yaml

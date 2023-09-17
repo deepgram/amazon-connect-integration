@@ -12,8 +12,9 @@ amount of time.
 
 Build the image and push it to ECR:
 ```shell
-docker build -f Dockerfile.lambda --platform linux/amd64 -t 764576996850.dkr.ecr.us-east-1.amazonaws.com/kvs-dg-integrator-lambda:latest .
-docker push 764576996850.dkr.ecr.us-east-1.amazonaws.com/kvs-dg-integrator-lambda:latest
+docker build -f Dockerfile.lambda --platform linux/amd64 -t 764576996850.dkr.ecr.us-east-1.amazonaws.com/kvs-dg-integrator-lambda:latest . \
+&& aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 764576996850.dkr.ecr.us-east-1.amazonaws.com \
+&& docker push 764576996850.dkr.ecr.us-east-1.amazonaws.com/kvs-dg-integrator-lambda:latest
 ```
 Then spin up the Lambda with a CloudFormation template:
 ```yaml

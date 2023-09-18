@@ -1,0 +1,36 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Enable streaming Amazon Connect calls to Deepgram
+
+Parameters:
+  deepgramApiKey:
+    Description: The Deepgram API key that will be used for transcription
+    Type: String
+
+Resources:
+  kvsDgTrigger:
+    Type: "AWS::Lambda::Function"
+    Properties:
+      Role: arn:aws:iam::764576996850:role/kvsDgTriggerRole
+      Timeout: 30
+      Environment:
+        Variables:
+          KVS_DG_INTEGRATOR: !GetAtt kvsDgIntegratorLambda.Arn
+      PackageType: "Image"
+      Code:
+        ImageUri: 764576996850.dkr.ecr.us-east-1.amazonaws.com/kvs-dg-trigger:latest
+
+  # A Lambda version of the integrator for easier e2e testing. Ultimately, the integrator will be
+  # deployed via Fargate or EC2.
+  kvsDgIntegratorLambda:
+    Type: "AWS::Lambda::Function"
+    Properties:
+      Role: arn:aws:iam::764576996850:role/kvsDgIntegratorLambdaRole
+      MemorySize: 512
+      Timeout: 900
+      Environment:
+        Variables:
+          APP_REGION: !Ref "AWS::Region"
+          DEEPGRAM_API_KEY: !Ref deepgramApiKey
+      PackageType: "Image"
+      Code:
+        ImageUri: 764576996850.dkr.ecr.us-east-1.amazonaws.com/kvs-dg-integrator-lambda:latest

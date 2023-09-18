@@ -72,7 +72,12 @@ public final class KvsUtils {
      * Each frame has a ByteBuffer of size 1024.
      *
      * <p>Actually, the above is the comment from Amazon Connect, but in reality some ByteBuffers returned by this function
-     * have a nonzero size less than 1024. The vast majority do have 1024, however.
+     * have a nonzero size less than 1024.
+     *
+     * <p>In my experience, each Connect call will have exactly one FROM_CUSTOMER buffer with an unusual number of bytes,
+     * and exactly one TO_CUSTOMER buffer with an unusual number of bytes. These will occur together right before the
+     * end of the call. After these unusual buffers, each track will yield ~5 more 1024-byte buffers and then the stream
+     * will end.
      */
     public static ByteBuffer getByteBufferFromStream(KvsStreamTrack kvsStreamTrack) throws MkvElementVisitException {
         StreamingMkvReader streamingMkvReader = kvsStreamTrack.streamingMkvReader();

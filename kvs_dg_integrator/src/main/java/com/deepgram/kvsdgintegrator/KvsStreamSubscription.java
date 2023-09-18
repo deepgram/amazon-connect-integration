@@ -97,7 +97,8 @@ public class KvsStreamSubscription implements Subscription {
 
 						subscriber.onNext(interleavedBytes);
 					} else {
-						// This occurs on occasion, but rarely
+						// In my experience this occurs once per call, very close to the end of the call, regardless of
+						// the call's length.
 						logger.warn("Unusual frame size in KVS stream. FROM_CUSTOMER = %s, TO_CUSTOMER = %s"
 								.formatted(fromCustomerBytes.remaining(), toCustomerBytes.remaining()));
 					}

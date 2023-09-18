@@ -1,6 +1,8 @@
 package com.deepgram.kvsdgintegrator;
 
 import org.apache.commons.lang3.Validate;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 
@@ -10,9 +12,17 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * This Subscription converts audio bytes received from the KVS stream into AudioEvents
- * that can be sent to the Transcribe service. It implements a simple demand system that will read chunks of bytes
- * from a KVS stream using the KVS parser library
+ * <p>This Subscription reads the FROM_CUSTOMER and TO_CUSTOMER audio tracks from KVS. It interleaves them into
+ * 2-channel audio (with FROM_CUSTOMER on the first channel) and publishes them to the Subscriber as a series of
+ * {@link ByteBuffer}s.
+ *
+ * <p>The audio remains in linear16 format with sample of rate of 8000hz, just as it is received from KVS. The emitted
+ * {@link ByteBuffer}s are 2048 bytes each. That is:
+ * <ul>
+ * 	<li>1024 bytes per channel</li>
+ *	<li>512 samples per channel</li>
+ *	<li>64ms of audio</li>
+ * </ul>
  *
  * <p>Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.</p>
  * <p>
@@ -31,15 +41,20 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class KvsStreamSubscription implements Subscription {
 
-	private static final int CHUNK_SIZE_IN_KB = 4;
 	private final ExecutorService executor = Executors.newFixedThreadPool(1); // Change nThreads here!! used in SubmissionPublisher not subscription
 	private final AtomicLong demand = new AtomicLong(0); // state container
 	private final Subscriber<? super ByteBuffer> subscriber;
-	private final KvsStreamTrack kvsStreamTrack;
+	private final KvsStreamTrack fromCustomerTrack;
+	private final KvsStreamTrack toCustomerTrack;
 
-	public KvsStreamSubscription(Subscriber<? super ByteBuffer> s, KvsStreamTrack kvsStreamTrack) {
+	private static final Logger logger = LogManager.getLogger(KvsStreamSubscription.class);
+
+
+	public KvsStreamSubscription(
+			Subscriber<? super ByteBuffer> s, KvsStreamTrack fromCustomerTrack, KvsStreamTrack toCustomerTrack) {
 		this.subscriber = Validate.notNull(s);
-		this.kvsStreamTrack = Validate.notNull(kvsStreamTrack);
+		this.fromCustomerTrack = Validate.notNull(fromCustomerTrack);
+		this.toCustomerTrack = Validate.notNull(toCustomerTrack);
 	}
 
 	@Override
@@ -53,15 +68,40 @@ public class KvsStreamSubscription implements Subscription {
 		executor.submit(() -> {
 			try {
 				while (demand.get() > 0) {
-					// return byteBufferDetails and consume this with an input stream then feed to output stream
-					ByteBuffer audioBuffer = KvsUtils.getByteBufferFromStream(kvsStreamTrack, CHUNK_SIZE_IN_KB);
+					ByteBuffer fromCustomerBytes = KvsUtils.getByteBufferFromStream(fromCustomerTrack);
+					ByteBuffer toCustomerBytes = KvsUtils.getByteBufferFromStream(toCustomerTrack);
 
-					if (audioBuffer.remaining() > 0) {
-						subscriber.onNext(audioBuffer);
-					} else {
+					if (fromCustomerBytes.remaining() == 0 || toCustomerBytes.remaining() == 0) {
+						logger.info("One or both KVS tracks ended; now closing session");
+
+						if (fromCustomerBytes.remaining() != 0) {
+							logger.warn("FROM_CUSTOMER track still had some audio left; discarding it");
+						} else if (toCustomerBytes.remaining() != 0) {
+							logger.warn("TO_CUSTOMER track still had some audio left; discarding it");
+						} else {
+							logger.info("FROM_CUSTOMER and TO_CUSTOMER tracks ended at the same time");
+						}
+
 						subscriber.onComplete();
 						break;
+					} else if (fromCustomerBytes.remaining() == 1024 && toCustomerBytes.remaining() == 1024) {
+						logger.trace("Both tracks had valid frame sizes");
+						ByteBuffer interleavedBytes = ByteBuffer.allocate(2048);
+						for (int i = 0; i < 512; i++) {
+							interleavedBytes.put(fromCustomerBytes.get());
+							interleavedBytes.put(fromCustomerBytes.get());
+							interleavedBytes.put(toCustomerBytes.get());
+							interleavedBytes.put(toCustomerBytes.get());
+						}
+						interleavedBytes.flip();
+
+						subscriber.onNext(interleavedBytes);
+					} else {
+						// This occurs on occasion, but rarely
+						logger.warn("Unusual frame size in KVS stream. FROM_CUSTOMER = %s, TO_CUSTOMER = %s"
+								.formatted(fromCustomerBytes.remaining(), toCustomerBytes.remaining()));
 					}
+
 					demand.getAndDecrement();
 				}
 			} catch (Exception e) {

@@ -48,7 +48,7 @@ public class DeepgramStreamingClient implements AutoCloseable {
 		String baseUri = "wss://api.deepgram.com/v1/listen";
 		StringBuilder queryString = new StringBuilder();
 
-		queryString.append("encoding=linear16&sample_rate=8000");
+		queryString.append("encoding=linear16&sample_rate=8000&multichannel=true&channels=2");
 
 		for (Map.Entry<String, List<String>> entry : dgParams.entrySet()) {
 			for (String value : entry.getValue()) {
@@ -66,10 +66,8 @@ public class DeepgramStreamingClient implements AutoCloseable {
 		return Map.of("Authorization", "Token " + deepgramApiKey);
 	}
 
-	public CompletableFuture<Void> startStreamingToDeepgram(final Publisher<ByteBuffer> publisher,
-															final String channel) {
+	public CompletableFuture<Void> startStreamingToDeepgram(final Publisher<ByteBuffer> publisher) {
 		Validate.notNull(publisher);
-		Validate.notNull(channel);
 
 		CompletableFuture<Void> future = new CompletableFuture<>();
 

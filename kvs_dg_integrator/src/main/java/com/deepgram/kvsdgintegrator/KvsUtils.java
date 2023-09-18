@@ -68,8 +68,11 @@ public final class KvsUtils {
     private static final Logger logger = LogManager.getLogger(KvsUtils.class);
 
     /**
-     * Fetches the next ByteBuffer of size 1024 bytes from the KVS stream by parsing the frame from the MkvElement
-     * Each frame has a ByteBuffer having size 1024
+     * Fetches the next ByteBuffer of size 1024 bytes from the KVS stream by parsing the frame from the MkvElement.
+     * Each frame has a ByteBuffer of size 1024.
+     *
+     * <p>Actually, the above is the comment from Amazon Connect, but in reality some ByteBuffers returned by this function
+     * have a nonzero size less than 1024. The vast majority do have 1024, however.
      */
     public static ByteBuffer getByteBufferFromStream(KvsStreamTrack kvsStreamTrack) throws MkvElementVisitException {
         StreamingMkvReader streamingMkvReader = kvsStreamTrack.streamingMkvReader();
@@ -94,8 +97,10 @@ public final class KvsUtils {
                     long trackNumber = frame.getTrackNumber();
                     MkvTrackMetadata metadata = fragmentVisitor.getMkvTrackMetadata(trackNumber);
                     if (trackName.equals(metadata.getTrackName())) {
+                        logger.trace("Returning KVS frame for track %s: %s".formatted(trackName, frame.toString()));
                         return audioBuffer;
                     } else if ("Track_audio/L16".equals(metadata.getTrackName()) && TrackName.AUDIO_FROM_CUSTOMER.getName().equals(trackName)) {
+                        logger.trace("Returning KVS frame for track %s (backward compatible): %s".formatted(trackName, frame.toString()));
                         // backwards compatibility
                         return audioBuffer;
                     }
@@ -106,46 +111,6 @@ public final class KvsUtils {
         }
 
         return ByteBuffer.allocate(0);
-    }
-
-    /**
-     * Fetches ByteBuffer of provided size from the KVS stream by repeatedly calling {@link KvsUtils#getByteBufferFromStream}
-     * and concatenating the ByteBuffers to create a single chunk
-     */
-    public static ByteBuffer getByteBufferFromStream(
-            KvsStreamTrack kvsStreamTrack,
-            int chunkSizeInKB
-    ) throws MkvElementVisitException {
-
-        List<ByteBuffer> byteBufferList = new ArrayList<ByteBuffer>();
-
-        for (int i = 0; i < chunkSizeInKB; i++) {
-            ByteBuffer byteBuffer = KvsUtils.getByteBufferFromStream(kvsStreamTrack);
-            if (byteBuffer.remaining() > 0) {
-                byteBufferList.add(byteBuffer);
-            } else {
-                break;
-            }
-        }
-
-        int length = 0;
-
-        for (ByteBuffer bb : byteBufferList) {
-            length += bb.remaining();
-        }
-
-        if (length == 0) {
-            return ByteBuffer.allocate(0);
-        }
-
-        ByteBuffer combinedByteBuffer = ByteBuffer.allocate(length);
-
-        for (ByteBuffer bb : byteBufferList) {
-            combinedByteBuffer.put(bb);
-        }
-
-        combinedByteBuffer.flip();
-        return combinedByteBuffer;
     }
 
     /**

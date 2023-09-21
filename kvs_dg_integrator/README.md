@@ -8,7 +8,20 @@ For testing, it can be deployed to a Lambda function. In production, it
 should be deployed to Fargate or EC2 so that it can run for an unlimited 
 amount of time.
 
-## Deploy to Lambda
+## Deploy to Fargate
+
+Build the image and push it to ECR:
+
+```shell
+docker build --platform linux/amd64 -t 764576996850.dkr.ecr.us-east-1.amazonaws.com/kvs-dg-integrator:latest . \
+&& aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 764576996850.dkr.ecr.us-east-1.amazonaws.com \
+&& docker push 764576996850.dkr.ecr.us-east-1.amazonaws.com/kvs-dg-integrator:latest
+```
+
+Then spin up the Fargate task and all its associated resources
+using `cloudformation.yaml`.
+
+## Deploy to Lambda (testing only)
 
 Build the image and push it to ECR:
 ```shell

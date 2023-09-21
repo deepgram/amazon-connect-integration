@@ -21,10 +21,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 /**
- * Demonstrate Amazon Connect's real-time transcription feature using AWS Kinesis Video Streams and AWS Transcribe.
- * The data flow is :
+ * Streams Amazon Connect calls to Deepgram for transcription. The data flow is:
  * <p>
- * Amazon Connect => AWS KVS => AWS Transcribe => AWS DynamoDB
+ * Amazon Connect => AWS KVS => KvsToDgIntegrator => Deepgram
  *
  * <p>Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.</p>
  * <p>
@@ -102,9 +101,6 @@ public class KvsToDgStreamer implements RequestHandler<IntegratorArguments, Stri
 		}
 	}
 
-	/**
-	 * Create all objects necessary for KVS streaming from each track
-	 */
 	private static KvsStreamTrack getKvsStreamTrack(String streamName, String startFragmentNum, String trackName,
 																String contactId) {
 		logger.trace("Creating KVS track object for track %s".formatted(trackName));
@@ -119,14 +115,14 @@ public class KvsToDgStreamer implements RequestHandler<IntegratorArguments, Stri
 	}
 
 	/**
-	 * @return AWS credentials to be used to connect to s3 (for fetching and uploading audio) and KVS
+	 * @return AWS credentials to be used to connect to KVS
 	 */
 	private static AWSCredentialsProvider getAWSCredentials() {
 		return DefaultAWSCredentialsProviderChain.getInstance();
 	}
 
 	/**
-	 * Emits audio events from a KVS stream asynchronously in a separate thread
+	 * Publishes `ByteBuffers` containing merged multichannel audio of the two tracks.
 	 */
 	private record KvsStreamPublisher(KvsStreamTrack fromCustomerTrack,
 									  KvsStreamTrack toCustomerTrack) implements Publisher<ByteBuffer> {

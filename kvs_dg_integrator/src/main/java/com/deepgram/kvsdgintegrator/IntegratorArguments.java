@@ -6,6 +6,7 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import org.apache.commons.lang3.Validate;
 
 import java.io.IOException;
 import java.util.*;
@@ -20,13 +21,9 @@ public record IntegratorArguments(
             @JsonProperty(required = true, value = "kvsStream") KvsStream kvsStream,
             @JsonProperty(required = true, value = "dgParams") Map<String, List<String>> dgParams
     ) {
-        if (contactId == null || kvsStream == null || dgParams == null) {
-            throw new IllegalArgumentException("null values not allowed in JSON arguments");
-        }
-
-        this.contactId = contactId;
-        this.kvsStream = kvsStream;
-        this.dgParams = dgParams;
+        this.contactId = Validate.notNull(contactId);
+        this.kvsStream = Validate.notNull(kvsStream);
+        this.dgParams = Validate.notNull(dgParams);
     }
 
     private static class DgParamsDeserializer extends JsonDeserializer<Map<String, List<String>>> {
@@ -82,15 +79,8 @@ public record IntegratorArguments(
                     @JsonProperty(required = true, value = "arn") String arn,
                     @JsonProperty(required = true, value = "startFragmentNumber") String startFragmentNumber
             ) {
-                if (arn == null) {
-                    throw new IllegalArgumentException("Received null kvs stream arn");
-                }
-                if (startFragmentNumber == null) {
-                    throw new IllegalArgumentException("Received null start fragment number");
-                }
-
-                this.arn = arn;
-                this.startFragmentNumber = startFragmentNumber;
+                this.arn = Validate.notNull(arn);
+                this.startFragmentNumber = Validate.notNull(startFragmentNumber);
             }
         }
 }

@@ -1,8 +1,6 @@
 package com.deepgram.kvsdgintegrator;
 
 import org.apache.commons.lang3.Validate;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
 import org.reactivestreams.Publisher;
@@ -23,8 +21,6 @@ public class DeepgramStreamingClient implements AutoCloseable {
 	private final URI deepgramStreamingUrl;
 	private final Map<String, String> deepgramHeaders;
 
-	private static final Logger logger = LogManager.getLogger(DeepgramStreamingClient.class);
-
 	public DeepgramStreamingClient(Map<String, List<String>> dgParams, String deepgramApiKey) throws URISyntaxException {
 		this.deepgramStreamingUrl = getDeepgramStreamingUrl(dgParams);
 		this.deepgramHeaders = getDeepgramHeaders(deepgramApiKey);
@@ -32,14 +28,16 @@ public class DeepgramStreamingClient implements AutoCloseable {
 
 	/**
 	 * For example, if our `dgParams` are:
+	 * <pre><code>
 	 * {
-	 * "model": ["nova"],
-	 * "callback": ["https://www.example.com"],
-	 * "tag": ["someTag1", "someTag2"]
-	 * }
+	 *   "model": ["nova"],
+	 *   "callback": ["https://www.example.com"],
+	 *   "tag": ["someTag1", "someTag2"]
+	 * }</code></pre>
 	 * <p>
 	 * Then this function uses the query params:
-	 * model=nova&callback=https%3A%2F%2Fwww.example.com&tag=someTag1&tag=someTag2
+	 * <pre><code>
+	 * model=nova&callback=https%3A%2F%2Fwww.example.com&tag=someTag1&tag=someTag2</code></pre>
 	 * <p>
 	 * Also, there are some default query params like `encoding` and `sample_rate` that are the same regardless of
 	 * the `dgParams`.

@@ -17,7 +17,6 @@ public class KvsContactTagProcessor implements FragmentMetadataVisitor.MkvTagPro
     private final String contactId;
 
     private boolean sameContact = true;
-    private boolean stopStreaming = false;
 
     public KvsContactTagProcessor(String contactId) {
         this.contactId = contactId;
@@ -38,6 +37,6 @@ public class KvsContactTagProcessor implements FragmentMetadataVisitor.MkvTagPro
     }
 
     public boolean shouldStopProcessing() {
-        return sameContact == false || stopStreaming == true;
+        return !sameContact;
     }
 }

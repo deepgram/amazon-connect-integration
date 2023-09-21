@@ -1,36 +1,40 @@
 package com.deepgram.kvsdgintegrator;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class Launcher {
+	private static final Logger logger = LogManager.getLogger(Launcher.class);
+
 	public static void main(String[] args) {
-		System.out.println("Launching task");
+		logger.info("Launching integrator task");
 		String integratorArgumentsJson = System.getenv("INTEGRATOR_ARGUMENTS");
 		if (integratorArgumentsJson == null) {
-			System.out.println("ERROR: this task expects an environment variable INTEGRATOR_ARGUMENTS");
+			logger.error("This task expects an environment variable INTEGRATOR_ARGUMENTS");
 			return;
 		} else {
-			System.out.println("INTEGRATOR_ARGUMENTS=" + integratorArgumentsJson);
+			logger.info("INTEGRATOR_ARGUMENTS=" + integratorArgumentsJson);
 		}
 
 		IntegratorArguments integratorArguments;
 		try {
 			integratorArguments = IntegratorArguments.fromJson(integratorArgumentsJson);
 		} catch (JsonProcessingException e) {
-			System.out.println("ERROR: couldn't parse INTEGRATOR_ARGUMENTS: " + e);
+			logger.error("Couldn't parse INTEGRATOR_ARGUMENTS: " + e);
 			return;
 		}
 
 		String deepgramApiKey = System.getenv("DEEPGRAM_API_KEY");
 		if (deepgramApiKey == null) {
-			System.out.println("ERROR: this task expects an environment variable DEEPGRAM_API_KEY");
+			logger.error("This task expects an environment variable DEEPGRAM_API_KEY");
 			return;
 		}
 
 		try {
 			KvsToDgStreamer.startKvsToDgStreaming(integratorArguments, deepgramApiKey);
 		} catch (Exception e) {
-			System.out.println("ERROR: exception while attempting to stream audio: " + e);
+			logger.error("Task failed with exception: " + e);
 		}
 	}
 }

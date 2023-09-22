@@ -5,6 +5,12 @@ Parameters:
   deepgramApiKey:
     Description: The Deepgram API key that will be used for transcription
     Type: String
+  vpcId:
+    Description: VPC where the ECS service will be deployed
+    Type: AWS::EC2::VPC::Id
+  subnets:
+    Description: Subnets where the ECS service will be deployed
+    Type: List<AWS::EC2::Subnet::Id>
 
 Resources:
   kvsDgTrigger:
@@ -14,23 +20,50 @@ Resources:
       Timeout: 30
       Environment:
         Variables:
-          KVS_DG_INTEGRATOR: !GetAtt kvsDgIntegratorLambda.Arn
+          KVS_DG_INTEGRATOR_CLUSTER: !GetAtt kvsDgIntegratorEcsCluster.Arn
+          KVS_DG_INTEGRATOR_TASK_DEFINITION: !Ref kvsDgIntegratorTaskDefinition
+          KVS_DG_INTEGRATOR_SECURITY_GROUP: !Ref kvsDgIntegratorSecurityGroup
+          KVS_DG_INTEGRATOR_SUBNETS: !Join [",", !Ref subnets]
+          DEEPGRAM_API_KEY: !Ref deepgramApiKey
       PackageType: "Image"
       Code:
         ImageUri: 764576996850.dkr.ecr.us-east-1.amazonaws.com/kvs-dg-trigger:latest
 
-  # A Lambda version of the integrator for easier e2e testing. Ultimately, the integrator will be
-  # deployed via Fargate or EC2.
-  kvsDgIntegratorLambda:
-    Type: "AWS::Lambda::Function"
+  kvsDgIntegratorEcsCluster:
+    Type: "AWS::ECS::Cluster"
     Properties:
-      Role: arn:aws:iam::764576996850:role/kvsDgIntegratorLambdaRole
-      MemorySize: 512
-      Timeout: 900
-      Environment:
-        Variables:
-          APP_REGION: !Ref "AWS::Region"
-          DEEPGRAM_API_KEY: !Ref deepgramApiKey
-      PackageType: "Image"
-      Code:
-        ImageUri: 764576996850.dkr.ecr.us-east-1.amazonaws.com/kvs-dg-integrator-lambda:latest
+      ClusterName: kvs-dg-integrator-cluster
+
+  kvsDgIntegratorTaskDefinition:
+    Type: "AWS::ECS::TaskDefinition"
+    Properties:
+      ContainerDefinitions:
+        - Name: kvs-dg-integrator-container
+          Image: 764576996850.dkr.ecr.us-east-1.amazonaws.com/kvs-dg-integrator:latest
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-stream-prefix: ecs
+              awslogs-region: !Ref "AWS::Region"
+              awslogs-group: kvs-dg-integrator
+              awslogs-create-group: "true"
+      Cpu: "256"
+      ExecutionRoleArn: "arn:aws:iam::764576996850:role/kvsDgIntegratorRole"
+      TaskRoleArn: "arn:aws:iam::764576996850:role/kvsDgIntegratorRole"
+      Family: kvs-dg-integrator-task-family
+      Memory: "512"
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      RuntimePlatform:
+        OperatingSystemFamily: LINUX
+
+  kvsDgIntegratorSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for kvs-dg-integrator Fargate task
+      VpcId: !Ref vpcId
+      SecurityGroupEgress:
+        - CidrIp: 0.0.0.0/0
+          Description: Allow all outbound traffic
+          IpProtocol: "-1"

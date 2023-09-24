@@ -174,7 +174,6 @@ def start_lambda_integrator_session(lambda_function_name, payload):
 def start_fargate_integrator_session(
     cluster, task_def, security_group, subnets, dg_api_key, aws_region, payload
 ):
-    region = boto3.session.Session().region_name
     ecs_client = boto3.client("ecs")
     response = ecs_client.run_task(
         cluster=cluster,

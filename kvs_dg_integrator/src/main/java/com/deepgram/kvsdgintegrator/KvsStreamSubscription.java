@@ -41,6 +41,7 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class KvsStreamSubscription implements Subscription {
 
+	//TODO: Make sure these threads are not outliving the KVS streams
 	private final ExecutorService executor = Executors.newFixedThreadPool(1); // Change nThreads here!! used in SubmissionPublisher not subscription
 	private final AtomicLong demand = new AtomicLong(0); // state container
 	private final Subscriber<? super ByteBuffer> subscriber;

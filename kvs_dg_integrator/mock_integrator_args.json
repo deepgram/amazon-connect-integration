@@ -2,7 +2,7 @@
     "contactId": "12345678-1f28-4e26-b97b-XXXXXXXXXXX",
     "kvsStream": {
         "arn": "arn:aws:kinesisvideo::eu-west-2:888111111111:stream/instance-alias-contact-ddddddd-bbbb-dddd-eeee-ffffffffffff/9999999999999",
-        "StartFragmentNumber": 100
+        "startFragmentNumber": 100
     },
     "dgParams": {
         "model": "nova"

@@ -18,8 +18,8 @@ Then spin up the lambda with a CloudFormation template:
       Timeout: 30
       Environment:
         Variables:
-          # Swap in the correct ARN
-          KVS_DG_INTEGRATOR: !GetAtt kvsDgIntegrator.Arn 
+          # Swap in the correct domain
+          KVS_DG_INTEGRATOR_DOMAIN: !GetAtt kvsDgIntegratorLoadBalancer.DNSName
       PackageType: "Image"
       Code:
         ImageUri: 764576996850.dkr.ecr.us-east-1.amazonaws.com/kvs-dg-trigger:latest

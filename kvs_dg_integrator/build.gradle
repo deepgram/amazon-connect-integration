@@ -29,7 +29,8 @@ dependencies {
             'com.amazonaws:aws-lambda-java-core:1.2.3',
             'com.amazonaws:aws-lambda-java-events:3.11.3',
             'com.amazonaws:aws-java-sdk-cloudwatch:1.11.987',
-            'com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.15.2'
+            'com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.15.2',
+            'com.sun.net.httpserver:http:20070405'
     )
     testImplementation(
             platform('org.junit:junit-bom:5.10.0'),

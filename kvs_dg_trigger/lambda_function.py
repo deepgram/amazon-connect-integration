@@ -2,6 +2,7 @@ from collections.abc import Mapping
 import json
 import os
 import boto3
+import requests
 
 
 def handler(event, context):
@@ -116,43 +117,13 @@ def start_integrator_session(payload):
         # Running integrator as lambda for testing purposes
         return start_lambda_integrator_session(integrator_lambda, payload)
 
-    cluster = os.getenv("KVS_DG_INTEGRATOR_CLUSTER")
-    if not cluster:
-        print("ERROR: please provide KVS_DG_INTEGRATOR_CLUSTER env variable")
-        return False
-
-    task_def = os.getenv("KVS_DG_INTEGRATOR_TASK_DEFINITION")
-    if not task_def:
-        print("ERROR: please provide KVS_DG_INTEGRATOR_TASK_DEFINITION env variable")
-        return False
-
-    security_group = os.getenv("KVS_DG_INTEGRATOR_SECURITY_GROUP")
-    if not security_group:
-        print("ERROR: please provide KVS_DG_INTEGRATOR_SECURITY_GROUP env variable")
-        return False
-
-    subnets_string = os.getenv("KVS_DG_INTEGRATOR_SUBNETS")
-    if not subnets_string:
-        print("ERROR: please provide KVS_DG_INTEGRATOR_SUBNETS env variable")
-        return False
-
-    dg_api_key = os.getenv("DEEPGRAM_API_KEY")
-    if not dg_api_key:
-        print("ERROR: please provide DEEPGRAM_API_KEY env variable")
-        return False
-
-    aws_region = os.getenv("AWS_REGION")
-    if not aws_region:
-        print("ERROR: for some reason lambda did not set the AWS_REGION env variable")
+    integrator_domain = os.getenv("KVS_DG_INTEGRATOR_DOMAIN")
+    if not integrator_domain:
+        print("ERROR: please provide KVS_DG_INTEGRATOR_DOMAIN env variable")
         return False
 
     return start_fargate_integrator_session(
-        cluster,
-        task_def,
-        security_group,
-        subnets_string.split(","),
-        dg_api_key,
-        aws_region,
+        integrator_domain,
         payload,
     )
 
@@ -167,37 +138,23 @@ def start_lambda_integrator_session(lambda_function_name, payload):
     if response["StatusCode"] == 202:
         return True
     else:
-        print(f"ERROR: Got error response from integrator: {response}")
+        print(f"ERROR: Got error response from integrator lambda: {response}")
         return False
 
 
-def start_fargate_integrator_session(
-    cluster, task_def, security_group, subnets, dg_api_key, aws_region, payload
-):
-    ecs_client = boto3.client("ecs")
-    response = ecs_client.run_task(
-        cluster=cluster,
-        taskDefinition=task_def,
-        launchType="FARGATE",
-        networkConfiguration={
-            "awsvpcConfiguration": {
-                "subnets": subnets,
-                "securityGroups": [security_group],
-                "assignPublicIp": "ENABLED",
-            }
-        },
-        overrides={
-            "containerOverrides": [
-                {
-                    "name": "kvs-dg-integrator-container",
-                    "environment": [
-                        {"name": "INTEGRATOR_ARGUMENTS", "value": json.dumps(payload)},
-                        {"name": "DEEPGRAM_API_KEY", "value": dg_api_key},
-                        {"name": "APP_REGION", "value": aws_region},
-                    ],
-                }
-            ]
-        },
-    )
-    print(f"Response from ECS: {response}")
-    return not response["failures"]
+def start_fargate_integrator_session(integrator_domain, payload):
+    print(f"Hitting integrator at domain: {integrator_domain}")
+
+    url = f"http://{integrator_domain}/start-session"
+    headers = {"Content-Type": "application/json"}
+
+    try:
+        response = requests.post(url, headers=headers, data=json.dumps(payload))
+        if response.status_code == 200:
+            print("Successfully started integrator session.")
+        else:
+            print(
+                f"ERROR: Integrator responded with {response.status_code}: {response.text}"
+            )
+    except Exception as err:
+        print(f"Error sending request to integrator: {err}")

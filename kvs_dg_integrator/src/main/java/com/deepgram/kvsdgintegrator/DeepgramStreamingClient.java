@@ -1,6 +1,8 @@
 package com.deepgram.kvsdgintegrator;
 
 import org.apache.commons.lang3.Validate;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
 import org.reactivestreams.Publisher;
@@ -20,6 +22,9 @@ public class DeepgramStreamingClient implements AutoCloseable {
 
 	private final URI deepgramStreamingUrl;
 	private final Map<String, String> deepgramHeaders;
+
+	private static final Logger logger = LogManager.getLogger(DeepgramStreamingClient.class);
+
 
 	public DeepgramStreamingClient(Map<String, List<String>> dgParams, String deepgramApiKey) throws URISyntaxException {
 		this.deepgramStreamingUrl = getDeepgramStreamingUrl(dgParams);
@@ -90,6 +95,8 @@ public class DeepgramStreamingClient implements AutoCloseable {
 			}
 		};
 		wsClient.connect();
+
+		logger.info("Opening connection to Deepgram...");
 
 		return future;
 	}

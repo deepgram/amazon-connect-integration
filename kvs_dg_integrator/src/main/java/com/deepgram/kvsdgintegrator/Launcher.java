@@ -27,14 +27,11 @@ public class Launcher {
 		}
 
 		HttpServer server = HttpServer.create(new InetSocketAddress(80), 0);
-		server.createContext("/health-check", new HttpHandler() {
-			@Override
-			public void handle(HttpExchange httpExchange) {
-				try (httpExchange) {
-					httpExchange.sendResponseHeaders(200, 0);
-				} catch (IOException e) {
-					throw new RuntimeException(e);
-				}
+		server.createContext("/health-check", httpExchange -> {
+			try (httpExchange) {
+				httpExchange.sendResponseHeaders(200, 0);
+			} catch (IOException e) {
+				throw new RuntimeException(e);
 			}
 		});
 		server.createContext("/start-session", new StartSessionHandler(deepgramApiKey));

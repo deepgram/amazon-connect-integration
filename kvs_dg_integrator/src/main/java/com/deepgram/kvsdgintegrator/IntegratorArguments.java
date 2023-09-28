@@ -11,6 +11,9 @@ import org.apache.commons.lang3.Validate;
 import java.io.IOException;
 import java.util.*;
 
+/**
+ * Arguments passed to the `/start-session` endpoint for each new integrator session
+ */
 public record IntegratorArguments(
         String contactId,
         KvsStream kvsStream,

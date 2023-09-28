@@ -83,7 +83,6 @@ public class KvsToDgStreamer implements RequestHandler<IntegratorArguments, Stri
 				streamName, startFragmentNum, KvsUtils.TrackName.AUDIO_TO_CUSTOMER.getName(), contactId);
 
 		try (DeepgramStreamingClient client = new DeepgramStreamingClient(integratorArguments.dgParams(), deepgramApiKey)) {
-			logger.info("Opening connection to Deepgram...");
 			KvsStreamPublisher publisher = new KvsStreamPublisher(fromCustomerTrack, toCustomerTrack);
 			CompletableFuture<Void> streamToDeepgramFuture = client.startStreamingToDeepgram(publisher);
 

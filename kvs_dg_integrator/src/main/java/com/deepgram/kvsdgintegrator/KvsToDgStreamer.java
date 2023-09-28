@@ -6,8 +6,6 @@ import com.amazonaws.kinesisvideo.parser.ebml.InputStreamParserByteSource;
 import com.amazonaws.kinesisvideo.parser.mkv.StreamingMkvReader;
 import com.amazonaws.kinesisvideo.parser.utilities.FragmentMetadataVisitor;
 import com.amazonaws.regions.Regions;
-import com.amazonaws.services.lambda.runtime.Context;
-import com.amazonaws.services.lambda.runtime.RequestHandler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.reactivestreams.Publisher;
@@ -16,9 +14,6 @@ import org.reactivestreams.Subscriber;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 /**
  * Streams Amazon Connect calls to Deepgram for transcription. The data flow is:
@@ -40,35 +35,10 @@ import java.util.concurrent.TimeoutException;
  * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-public class KvsToDgStreamer implements RequestHandler<IntegratorArguments, String> {
+public class KvsToDgStreamer {
 
 	private static final Regions REGION = Regions.fromName(System.getenv("APP_REGION"));
 	private static final Logger logger = LogManager.getLogger(KvsToDgStreamer.class);
-
-	/**
-	 * Handler function for when the integrator is being run as a Lambda. In production, the integrator should not be
-	 * run as a Lambda unless you're OK with it shutting down after 15 minutes.
-	 */
-	@Override
-	public String handleRequest(IntegratorArguments request, Context context) {
-		logger.info("received request : " + request.toString());
-		logger.info("received context: " + context.toString());
-
-		String deepgramApiKey = System.getenv("DEEPGRAM_API_KEY");
-		if (deepgramApiKey == null) {
-			System.out.println("ERROR: this task expects an environment variable DEEPGRAM_API_KEY");
-			return "{ \"result\": \"Failed\" }";
-		}
-
-		try {
-			startKvsToDgStreaming(request, deepgramApiKey);
-			return "{ \"result\": \"Success\" }";
-
-		} catch (Exception e) {
-			logger.error("KVS to Transcribe Streaming failed with: ", e);
-			return "{ \"result\": \"Failed\" }";
-		}
-	}
 
 	public static void startKvsToDgStreaming(IntegratorArguments integratorArguments, String deepgramApiKey) throws Exception {
 		String streamARN = integratorArguments.kvsStream().arn();
@@ -84,16 +54,7 @@ public class KvsToDgStreamer implements RequestHandler<IntegratorArguments, Stri
 
 		try (DeepgramStreamingClient client = new DeepgramStreamingClient(integratorArguments.dgParams(), deepgramApiKey)) {
 			KvsStreamPublisher publisher = new KvsStreamPublisher(fromCustomerTrack, toCustomerTrack);
-			CompletableFuture<Void> streamToDeepgramFuture = client.startStreamingToDeepgram(publisher);
-
-			// Synchronous wait for stream to close, and close client connection
-			// Timeout of 890 seconds because the Lambda function can be run for at most 15 mins (~890 secs)
-			// TODO: Remove this timeout when packaging for Fargate
-			streamToDeepgramFuture.get(890, TimeUnit.SECONDS);
-
-		} catch (TimeoutException e) {
-			logger.debug("Timing out KVS to Transcribe Streaming after 890 sec");
-
+			client.startStreamingToDeepgram(publisher).get();
 		} catch (Exception e) {
 			logger.error("Error during streaming: ", e);
 			throw e;

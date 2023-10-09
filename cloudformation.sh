@@ -1,8 +1,32 @@
 #!/bin/bash
 
+REPLACE=false
 STACK_NAME="$1"
+DELETE_STACK_NAME=""
+
 if [ -z "$STACK_NAME" ]; then
-  echo "Usage: $0 STACK_NAME"
+  echo "Usage: $0 STACK_NAME [-r|--replace STACK_NAME_TO_REPLACE]"
+  exit 1
+fi
+
+shift
+
+while (( "$#" )); do
+  case "$1" in
+    -r|--replace)
+      REPLACE=true
+      DELETE_STACK_NAME="$2"
+      shift 2
+      ;;
+    *)
+      echo "Usage: $0 STACK_NAME [-r|--replace STACK_NAME_TO_REPLACE]"
+      exit 1
+      ;;
+  esac
+done
+
+if [ "$REPLACE" = true ] && [ -z "$DELETE_STACK_NAME" ]; then
+  echo "Please specify the stack name to replace."
   exit 1
 fi
 
@@ -25,6 +49,14 @@ fi
 VPC_ID="vpc-46659c22"
 SUBNETS="subnet-8c1e57a7\,subnet-739f167f"
 
+if [ "$REPLACE" = true ]; then
+  echo "Deleting old stack $DELETE_STACK_NAME"
+  aws cloudformation delete-stack --stack-name $DELETE_STACK_NAME
+  aws cloudformation wait stack-delete-complete --stack-name $DELETE_STACK_NAME
+  echo "Old stack $DELETE_STACK_NAME deleted successfully!"
+fi
+
+echo "Creating new stack $STACK_NAME"
 aws cloudformation create-stack \
   --stack-name "${STACK_NAME}" \
   --template-body "${TEMPLATE_FILE}" \
@@ -35,4 +67,6 @@ aws cloudformation create-stack \
   --region "${REGION}" \
   --role-arn "${CLOUDFORMATION_ROLE}"
 
-echo "Stack creation initiated for ${STACK_NAME}"
+aws cloudformation wait stack-create-complete --stack-name $STACK_NAME
+
+echo "New stack $STACK_NAME created successfully!"

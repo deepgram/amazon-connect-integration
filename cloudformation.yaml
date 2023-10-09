@@ -21,6 +21,8 @@ Resources:
       Environment:
         Variables:
           KVS_DG_INTEGRATOR_DOMAIN: !GetAtt kvsDgIntegratorLoadBalancer.DNSName
+          LOAD_TEST_NUM_SESSIONS: "10"
+          LOAD_TEST_INTERVAL_MS: "3000"
       PackageType: "Image"
       Code:
         ImageUri: 764576996850.dkr.ecr.us-east-1.amazonaws.com/kvs-dg-trigger:latest
@@ -29,6 +31,9 @@ Resources:
     Type: "AWS::ECS::Cluster"
     Properties:
       ClusterName: kvs-dg-integrator-cluster
+      ClusterSettings:
+        - Name: containerInsights
+          Value: enabled # only use for load testing
 
   kvsDgIntegratorTaskDefinition:
     Type: "AWS::ECS::TaskDefinition"

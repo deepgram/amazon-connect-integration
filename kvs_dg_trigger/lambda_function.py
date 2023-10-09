@@ -1,6 +1,7 @@
 from collections.abc import Mapping
 import json
 import os
+import time
 import boto3
 import requests
 
@@ -48,14 +49,14 @@ def lambda_result(is_success):
 
 def get_dg_params(contact_attrs):
     """
-    Takes in the dictionary of contact attributes and returns the DG params. The DG params are the
-    query parameters that will ultimately be passed to the Deepgram streaming API. They are
-    represented in the contact attributes as attributes whose keys begin with `dg_`. This function
-    returns them as a dictionary.
+        Takes in the dictionary of contact attributes and returns the DG params. The DG params are the
+        query parameters that will ultimately be passed to the Deepgram streaming API. They are
+        represented in the contact attributes as attributes whose keys begin with `dg_`. This function
+        returns them as a dictionary.
 
-    See `lambda_function_test.py` for an example.
+        See `lambda_function_test.py` for an example.o work with async programming like in Rust's tokio::time::interval.tick(), an equivalent can be using asyncio.sleep() which is a coroutine that completes after a given delay.
 
-    If `contact_attrs` are formatted incorrectly, returns None.
+    Here is an equivalent async
     """
 
     if contact_attrs is None:
@@ -122,10 +123,35 @@ def start_integrator_session(payload):
         print("ERROR: please provide KVS_DG_INTEGRATOR_DOMAIN env variable")
         return False
 
-    return start_fargate_integrator_session(
-        integrator_domain,
-        payload,
-    )
+    load_test_num_sessions = os.getenv("LOAD_TEST_NUM_SESSIONS")
+    num_sessions = int(load_test_num_sessions) if load_test_num_sessions else 1
+    if num_sessions < 1:
+        print("LOAD_TEST_NUM_SESSIONS must not be less than 1")
+        return False
+
+    load_test_inverval_ms = os.getenv("LOAD_TEST_INTERVAL_MS")
+    interval_ms = int(load_test_inverval_ms) if load_test_inverval_ms else 0
+    if interval_ms < 0:
+        print("LOAD_TEST_INTERVAL_MS must not be negative")
+        return False
+    interval_secs = interval_ms / 1000
+
+    if num_sessions != 1:
+        print(
+            f"Running load test with {num_sessions} sessions at a {interval_ms}ms interval"
+        )
+
+    for i in range(num_sessions):
+        if i != 0:
+            time.sleep(interval_secs)
+
+        if not start_fargate_integrator_session(
+            integrator_domain,
+            payload,
+        ):
+            return False
+
+    return True
 
 
 def start_lambda_integrator_session(lambda_function_name, payload):

@@ -1,5 +1,8 @@
 #!/bin/bash
 
+set -e
+set -o pipefail
+
 REPLACE=false
 STACK_NAME="$1"
 DELETE_STACK_NAME=""

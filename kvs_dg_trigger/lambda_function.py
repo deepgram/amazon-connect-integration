@@ -182,5 +182,9 @@ def start_fargate_integrator_session(integrator_domain, payload):
             print(
                 f"ERROR: Integrator responded with {response.status_code}: {response.text}"
             )
+            return False
     except Exception as err:
         print(f"Error sending request to integrator: {err}")
+        return False
+
+    return True

@@ -48,14 +48,24 @@ public class KvsStreamSubscription implements Subscription {
 	private final KvsStreamTrack fromCustomerTrack;
 	private final KvsStreamTrack toCustomerTrack;
 
+	private final boolean enforceRealtime;
+
 	private static final Logger logger = LogManager.getLogger(KvsStreamSubscription.class);
 
-
+	/**
+	 * @param s                 The subscriber who will receive audio from this subscription
+	 * @param fromCustomerTrack The KVS track containing everything the customer says
+	 * @param toCustomerTrack   The KVS track containing everything the customer hears
+	 * @param enforceRealtime   If this is true we publish audio at its real resolution, waiting 64ms between each 64ms
+	 *                          audio buffer. If it's false we publish audio as quickly as we can read it, which means
+	 *                          we rapidly catch up to the current point in the call.
+	 */
 	public KvsStreamSubscription(
-			Subscriber<? super ByteBuffer> s, KvsStreamTrack fromCustomerTrack, KvsStreamTrack toCustomerTrack) {
+			Subscriber<? super ByteBuffer> s, KvsStreamTrack fromCustomerTrack, KvsStreamTrack toCustomerTrack, boolean enforceRealtime) {
 		this.subscriber = Validate.notNull(s);
 		this.fromCustomerTrack = Validate.notNull(fromCustomerTrack);
 		this.toCustomerTrack = Validate.notNull(toCustomerTrack);
+		this.enforceRealtime = enforceRealtime;
 	}
 
 	@Override
@@ -68,6 +78,10 @@ public class KvsStreamSubscription implements Subscription {
 		//We need to invoke this in a separate thread because the call to subscriber.onNext(...) is recursive
 		executor.submit(() -> {
 			try {
+				// If enforceRealtime=true, we have to track the last published audio time so we can ensure a delay of at
+				// least 64ms between publishing each 64ms buffer
+				long lastPublishedAudioInUnixTime = -1;
+
 				while (demand.get() > 0) {
 					ByteBuffer fromCustomerBytes = KvsUtils.getByteBufferFromStream(fromCustomerTrack);
 					ByteBuffer toCustomerBytes = KvsUtils.getByteBufferFromStream(toCustomerTrack);
@@ -95,6 +109,14 @@ public class KvsStreamSubscription implements Subscription {
 							interleavedBytes.put(toCustomerBytes.get());
 						}
 						interleavedBytes.flip();
+
+						if (this.enforceRealtime) {
+							long msSinceLastAudio = System.currentTimeMillis() - lastPublishedAudioInUnixTime;
+							if (msSinceLastAudio < 64) {
+								Thread.sleep(64 - msSinceLastAudio);
+							}
+							lastPublishedAudioInUnixTime = System.currentTimeMillis();
+						}
 
 						subscriber.onNext(interleavedBytes);
 					} else {

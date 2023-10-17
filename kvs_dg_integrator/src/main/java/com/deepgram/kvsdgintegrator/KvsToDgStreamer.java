@@ -40,7 +40,8 @@ public class KvsToDgStreamer {
 	private static final Regions REGION = Regions.fromName(System.getenv("APP_REGION"));
 	private static final Logger logger = LogManager.getLogger(KvsToDgStreamer.class);
 
-	public static void startKvsToDgStreaming(IntegratorArguments integratorArguments, String deepgramApiKey) throws Exception {
+	public static void startKvsToDgStreaming(
+			IntegratorArguments integratorArguments, String deepgramApiKey, boolean enforceRealtime) throws Exception {
 		String streamARN = integratorArguments.kvsStream().arn();
 		String startFragmentNum = integratorArguments.kvsStream().startFragmentNumber();
 		String contactId = integratorArguments.contactId();
@@ -53,7 +54,7 @@ public class KvsToDgStreamer {
 				streamName, startFragmentNum, KvsUtils.TrackName.AUDIO_TO_CUSTOMER.getName(), contactId);
 
 		try (DeepgramStreamingClient client = new DeepgramStreamingClient(integratorArguments.dgParams(), deepgramApiKey)) {
-			KvsStreamPublisher publisher = new KvsStreamPublisher(fromCustomerTrack, toCustomerTrack);
+			KvsStreamPublisher publisher = new KvsStreamPublisher(fromCustomerTrack, toCustomerTrack, enforceRealtime);
 			client.startStreamingToDeepgram(publisher).get();
 		} catch (Exception e) {
 			logger.error("Error during streaming: ", e);
@@ -85,11 +86,12 @@ public class KvsToDgStreamer {
 	 * Publishes `ByteBuffers` containing merged multichannel audio of the two tracks.
 	 */
 	private record KvsStreamPublisher(KvsStreamTrack fromCustomerTrack,
-									  KvsStreamTrack toCustomerTrack) implements Publisher<ByteBuffer> {
+									  KvsStreamTrack toCustomerTrack,
+									  boolean enforceRealtime) implements Publisher<ByteBuffer> {
 
 		@Override
 		public void subscribe(Subscriber<? super ByteBuffer> s) {
-			s.onSubscribe(new KvsStreamSubscription(s, fromCustomerTrack, toCustomerTrack));
+			s.onSubscribe(new KvsStreamSubscription(s, fromCustomerTrack, toCustomerTrack, enforceRealtime));
 		}
 	}
 }

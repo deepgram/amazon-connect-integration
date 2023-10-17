@@ -17,12 +17,12 @@ Resources:
     Type: "AWS::Lambda::Function"
     Properties:
       Role: arn:aws:iam::764576996850:role/kvsDgTriggerRole
-      Timeout: 30
+      Timeout: 900
       Environment:
         Variables:
           KVS_DG_INTEGRATOR_DOMAIN: !GetAtt kvsDgIntegratorLoadBalancer.DNSName
-          LOAD_TEST_NUM_SESSIONS: "10"
-          LOAD_TEST_INTERVAL_MS: "3000"
+          LOAD_TEST_NUM_SESSIONS: "20"
+          LOAD_TEST_INTERVAL_MS: "15000"
       PackageType: "Image"
       Code:
         ImageUri: 764576996850.dkr.ecr.us-east-1.amazonaws.com/kvs-dg-trigger:latest
@@ -53,6 +53,8 @@ Resources:
               Value: !Ref deepgramApiKey
             - Name: APP_REGION
               Value: !Ref "AWS::Region"
+            - Name: ENFORCE_REALTIME # Set this to true for load testing only
+              Value: "true"
           PortMappings:
             - HostPort: 80
               ContainerPort: 80

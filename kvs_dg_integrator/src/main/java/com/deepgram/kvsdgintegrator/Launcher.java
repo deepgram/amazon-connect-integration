@@ -26,6 +26,10 @@ public class Launcher {
 			return;
 		}
 
+		String enforceRealtimeStr = System.getenv("ENFORCE_REALTIME");
+		boolean enforceRealtime = enforceRealtimeStr != null && enforceRealtimeStr.equalsIgnoreCase("true");
+		logger.info("Enforce realtime = " + enforceRealtime);
+
 		HttpServer server = HttpServer.create(new InetSocketAddress(80), 0);
 		server.createContext("/health-check", httpExchange -> {
 			try (httpExchange) {
@@ -34,7 +38,7 @@ public class Launcher {
 				throw new RuntimeException(e);
 			}
 		});
-		server.createContext("/start-session", new StartSessionHandler(deepgramApiKey));
+		server.createContext("/start-session", new StartSessionHandler(deepgramApiKey, enforceRealtime));
 		server.setExecutor(Executors.newCachedThreadPool());
 		server.start();
 	}
@@ -42,10 +46,13 @@ public class Launcher {
 	static class StartSessionHandler implements HttpHandler {
 		private final String deepgramApiKey;
 
+		private final boolean enforceRealtime;
+
 		private static final Logger logger = LogManager.getLogger(StartSessionHandler.class);
 
-		public StartSessionHandler(String deepgramApiKey) {
+		public StartSessionHandler(String deepgramApiKey, boolean enforceRealtime) {
 			this.deepgramApiKey = Validate.notNull(deepgramApiKey);
+			this.enforceRealtime = enforceRealtime;
 		}
 
 		@Override
@@ -75,7 +82,7 @@ public class Launcher {
 			logger.info("Integrator Arguments: %s".formatted(integratorArguments));
 
 			try {
-				KvsToDgStreamer.startKvsToDgStreaming(integratorArguments, this.deepgramApiKey);
+				KvsToDgStreamer.startKvsToDgStreaming(integratorArguments, this.deepgramApiKey, this.enforceRealtime);
 			} catch (Exception e) {
 				logger.error("Exception during integrator session", e);
 			}

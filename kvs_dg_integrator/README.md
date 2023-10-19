@@ -9,9 +9,9 @@ function, which passes it all the info it needs for the session.
 Build the image and push it to ECR:
 
 ```shell
-docker build --platform linux/amd64 -t 764576996850.dkr.ecr.us-east-1.amazonaws.com/kvs-dg-integrator:latest . \
-&& aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 764576996850.dkr.ecr.us-east-1.amazonaws.com \
-&& docker push 764576996850.dkr.ecr.us-east-1.amazonaws.com/kvs-dg-integrator:latest
+docker build --platform linux/amd64 -t 396185571030.dkr.ecr.us-east-1.amazonaws.com/kvs-dg-integrator:latest . \
+&& aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 396185571030.dkr.ecr.us-east-1.amazonaws.com \
+&& docker push 396185571030.dkr.ecr.us-east-1.amazonaws.com/kvs-dg-integrator:latest
 ```
 
 Then spin up the Fargate task and all its associated resources

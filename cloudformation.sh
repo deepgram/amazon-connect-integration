@@ -40,7 +40,6 @@ TAGS='[
 ]'
 REGION="us-east-1"
 TEMPLATE_FILE="file://cloudformation.yaml"
-CLOUDFORMATION_ROLE="arn:aws:iam::764576996850:role/OnPremDeploymentCFRole"
 
 DG_API_KEY="$AMAZON_CONNECT_DEEPGRAM_API_KEY"
 if [[ -z "$DG_API_KEY" ]]
@@ -49,8 +48,13 @@ then
   exit 1
 fi
 
-VPC_ID="vpc-46659c22"
-SUBNETS="subnet-8c1e57a7\,subnet-739f167f"
+# prod
+# VPC_ID="vpc-46659c22"
+# SUBNETS="subnet-8c1e57a7\,subnet-739f167f"
+
+# dev
+VPC_ID="vpc-077b36daf7829fbee"
+SUBNETS="subnet-068e487e27efbe720\,subnet-0cd74a6d628166ca0"
 
 if [ "$REPLACE" = true ]; then
   echo "Deleting old stack $DELETE_STACK_NAME"
@@ -68,7 +72,7 @@ aws cloudformation create-stack \
     ParameterKey=subnets,ParameterValue="${SUBNETS}" \
   --tags "${TAGS}" \
   --region "${REGION}" \
-  --role-arn "${CLOUDFORMATION_ROLE}"
+  --capabilities CAPABILITY_NAMED_IAM
 
 aws cloudformation wait stack-create-complete --stack-name $STACK_NAME
 

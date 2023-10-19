@@ -13,34 +13,90 @@ Parameters:
     Type: List<AWS::EC2::Subnet::Id>
 
 Resources:
+  kvsDgTriggerRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service:
+                - "lambda.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
   kvsDgTrigger:
     Type: "AWS::Lambda::Function"
     Properties:
-      Role: arn:aws:iam::764576996850:role/kvsDgTriggerRole
+      Role: !GetAtt kvsDgTriggerRole.Arn
       Timeout: 900
       Environment:
         Variables:
           KVS_DG_INTEGRATOR_DOMAIN: !GetAtt kvsDgIntegratorLoadBalancer.DNSName
-          LOAD_TEST_NUM_SESSIONS: "20"
-          LOAD_TEST_INTERVAL_MS: "15000"
+          # LOAD_TEST_NUM_SESSIONS: "20" # load testing only
+          # LOAD_TEST_INTERVAL_MS: "15000" # load testing only
       PackageType: "Image"
       Code:
-        ImageUri: 764576996850.dkr.ecr.us-east-1.amazonaws.com/kvs-dg-trigger:latest
+        ImageUri: 396185571030.dkr.ecr.us-east-1.amazonaws.com/kvs-dg-trigger:latest
 
   kvsDgIntegratorEcsCluster:
     Type: "AWS::ECS::Cluster"
     Properties:
       ClusterName: kvs-dg-integrator-cluster
-      ClusterSettings:
-        - Name: containerInsights
-          Value: enabled # only use for load testing
+      # ClusterSettings:
+      #   - Name: containerInsights # load testing only
+      #     Value: enabled
+
+  kvsDgIntegratorExecutionRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      RoleName: kvsDgIntegratorExecutionRole
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ecs-tasks.amazonaws.com
+            Action:
+              - "sts:AssumeRole"
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+      Policies:
+        - PolicyName: "CloudWatchLogsCreateLogGroup"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action:
+                  - "logs:CreateLogGroup"
+                Resource: "*"
+
+  kvsDgIntegratorTaskRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      RoleName: kvsDgIntegratorTaskRole
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ecs-tasks.amazonaws.com
+            Action:
+              - "sts:AssumeRole"
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/AmazonKinesisVideoStreamsReadOnlyAccess"
 
   kvsDgIntegratorTaskDefinition:
     Type: "AWS::ECS::TaskDefinition"
     Properties:
       ContainerDefinitions:
         - Name: kvs-dg-integrator-container
-          Image: 764576996850.dkr.ecr.us-east-1.amazonaws.com/kvs-dg-integrator:latest
+          Image: 396185571030.dkr.ecr.us-east-1.amazonaws.com/kvs-dg-integrator:latest
           LogConfiguration:
             LogDriver: awslogs
             Options:
@@ -53,16 +109,16 @@ Resources:
               Value: !Ref deepgramApiKey
             - Name: APP_REGION
               Value: !Ref "AWS::Region"
-            - Name: ENFORCE_REALTIME # Set this to true for load testing only
-              Value: "true"
+            # - Name: ENFORCE_REALTIME # load testing only
+            #   Value: "true"
           PortMappings:
             - HostPort: 80
               ContainerPort: 80
               Protocol: tcp
               AppProtocol: http
       Cpu: "256"
-      ExecutionRoleArn: "arn:aws:iam::764576996850:role/kvsDgIntegratorRole"
-      TaskRoleArn: "arn:aws:iam::764576996850:role/kvsDgIntegratorRole"
+      ExecutionRoleArn: !GetAtt kvsDgIntegratorExecutionRole.Arn
+      TaskRoleArn: !GetAtt kvsDgIntegratorTaskRole.Arn
       Family: kvs-dg-integrator-task-family
       Memory: "512"
       NetworkMode: awsvpc

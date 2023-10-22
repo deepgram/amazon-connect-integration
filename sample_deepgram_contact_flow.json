@@ -7,11 +7,12 @@
             "y": 18.4
         },
         "ActionMetadata": {
-            "410057d0-9390-486b-bbb4-c4def2a7367c": {
+            "Play 1 min of silence": {
                 "position": {
-                    "x": 506.4,
-                    "y": 325.6
-                }
+                    "x": 797.6,
+                    "y": 874.4
+                },
+                "isFriendlyName": true
             },
             "856dd865-e5a0-49c6-aacc-55fe53c38a22": {
                 "position": {
@@ -21,47 +22,65 @@
             },
             "d5bd7724-4436-4bfc-bd2a-d0bee26963a1": {
                 "position": {
-                    "x": 430.4,
-                    "y": 16
+                    "x": 509.6,
+                    "y": 18.4
+                }
+            },
+            "410057d0-9390-486b-bbb4-c4def2a7367c": {
+                "position": {
+                    "x": 512.8,
+                    "y": 230.4
                 }
             },
             "3f9659a3-56a5-4f3c-a431-fd9da2306459": {
                 "position": {
-                    "x": 354.4,
-                    "y": 557.6
+                    "x": 522.4,
+                    "y": 641.6
                 }
+            },
+            "Play 100 mins of silence": {
+                "position": {
+                    "x": 528.8,
+                    "y": 872.8
+                },
+                "isFriendlyName": true
             },
             "99458f47-6941-48ce-9b90-fdf184759b22": {
                 "position": {
-                    "x": 788.8,
-                    "y": 644.8
+                    "x": 1106.4,
+                    "y": 1140
                 }
             },
             "07273109-a75a-4742-aaae-ce35603c31fc": {
                 "position": {
-                    "x": 97.6,
-                    "y": 868
+                    "x": 201.6,
+                    "y": 876.8
                 }
             },
             "6728609a-9707-41f7-a87c-30ac1fde4f4c": {
                 "position": {
-                    "x": 128.8,
-                    "y": 213.6
+                    "x": 185.6,
+                    "y": 204.8
                 },
                 "toCustomer": true,
                 "fromCustomer": true
             },
             "97a964a7-5dd2-4c82-b21f-173b209be8a7": {
                 "position": {
-                    "x": 101.6,
-                    "y": 609.6
+                    "x": 186.4,
+                    "y": 640.8
+                },
+                "parameters": {
+                    "LambdaFunctionARN": {
+                        "displayName": "connect-test-j-kvsDgTrigger-xjRHteWE0fXO"
+                    }
                 },
                 "dynamicMetadata": {}
             },
             "Deepgram Configuration": {
                 "position": {
-                    "x": 100.8,
-                    "y": 424
+                    "x": 181.6,
+                    "y": 410.4
                 },
                 "isFriendlyName": true,
                 "dynamicParams": []
@@ -70,13 +89,13 @@
         "Annotations": [
             {
                 "type": "default",
-                "id": "1eea972b-aa90-4eff-82ee-3ab7c0fec95c",
+                "id": "799c9e6d-1b0e-4fb2-8167-698165492867",
                 "content": "Configure Deepgram through contact attributes. We can use any parameters available through the Deepgram streaming API. \n\nFor example, we can set \"model=nova\" by setting a contact attribute with key \"model\" and value \"nova\". We can set \"tag=sometag1&tag=sometag2\" by setting a contact attribute with key \"tag\" and value \"sometag1 sometag2\".\n\nThe \"callback\" parameter is where Deepgram will send transcripts. Within this parameter, we can inject the Contact ID of the current call. For example, set key \"callback\" and value \"https://www.example.com/some/path/{contact-id}\"",
                 "actionId": "Deepgram Configuration",
                 "isFolded": true,
                 "position": {
-                    "x": 145.16666666666666,
-                    "y": 736.6666666666666
+                    "x": 246.16666666666666,
+                    "y": 719.6666666666666
                 },
                 "size": {
                     "height": 295,
@@ -93,12 +112,18 @@
     "Actions": [
         {
             "Parameters": {
-                "Text": "An error occurred when we tried to start streaming."
+                "SSML": "<speak>\n<break time=\"5000ms\"/>\n<break time=\"5000ms\"/>\n<break time=\"5000ms\"/>\n<break time=\"5000ms\"/>\n<break time=\"5000ms\"/>\n<break time=\"5000ms\"/>\n<break time=\"5000ms\"/>\n<break time=\"5000ms\"/>\n<break time=\"5000ms\"/>\n<break time=\"5000ms\"/>\n<break time=\"5000ms\"/>\n<break time=\"5000ms\"/>\n</speak>"
             },
-            "Identifier": "410057d0-9390-486b-bbb4-c4def2a7367c",
+            "Identifier": "Play 1 min of silence",
             "Type": "MessageParticipant",
             "Transitions": {
-                "NextAction": "99458f47-6941-48ce-9b90-fdf184759b22"
+                "NextAction": "Play 100 mins of silence",
+                "Errors": [
+                    {
+                        "NextAction": "99458f47-6941-48ce-9b90-fdf184759b22",
+                        "ErrorType": "NoMatchingError"
+                    }
+                ]
             }
         },
         {
@@ -113,7 +138,7 @@
         },
         {
             "Parameters": {
-                "SSML": "<speak>\nThis call demonstrates real time transcription with Deepgram. We'll now begin sending call audio to Deepgram.\n<break time=\"500ms\"/>\n</speak>"
+                "Text": "This call demonstrates real time transcription with Deepgram."
             },
             "Identifier": "d5bd7724-4436-4bfc-bd2a-d0bee26963a1",
             "Type": "MessageParticipant",
@@ -129,16 +154,56 @@
         },
         {
             "Parameters": {
-                "Text": "An error occurred with inoking the Deepgram lambda function."
+                "Text": "An error occurred when we tried to start streaming."
+            },
+            "Identifier": "410057d0-9390-486b-bbb4-c4def2a7367c",
+            "Type": "MessageParticipant",
+            "Transitions": {
+                "NextAction": "99458f47-6941-48ce-9b90-fdf184759b22"
+            }
+        },
+        {
+            "Parameters": {
+                "Text": "Lambda function failed or timed out."
             },
             "Identifier": "3f9659a3-56a5-4f3c-a431-fd9da2306459",
             "Type": "MessageParticipant",
             "Transitions": {
-                "NextAction": "99458f47-6941-48ce-9b90-fdf184759b22",
+                "NextAction": "Play 100 mins of silence",
                 "Errors": [
                     {
                         "NextAction": "99458f47-6941-48ce-9b90-fdf184759b22",
                         "ErrorType": "NoMatchingError"
+                    }
+                ]
+            }
+        },
+        {
+            "Parameters": {
+                "LoopCount": "100"
+            },
+            "Identifier": "Play 100 mins of silence",
+            "Type": "Loop",
+            "Transitions": {
+                "NextAction": "99458f47-6941-48ce-9b90-fdf184759b22",
+                "Conditions": [
+                    {
+                        "NextAction": "Play 1 min of silence",
+                        "Condition": {
+                            "Operator": "Equals",
+                            "Operands": [
+                                "ContinueLooping"
+                            ]
+                        }
+                    },
+                    {
+                        "NextAction": "99458f47-6941-48ce-9b90-fdf184759b22",
+                        "Condition": {
+                            "Operator": "Equals",
+                            "Operands": [
+                                "DoneLooping"
+                            ]
+                        }
                     }
                 ]
             }
@@ -151,12 +216,12 @@
         },
         {
             "Parameters": {
-                "SSML": "<speak>\nThis call is now being transcribed by Deepgram.\n<break time=\"1000ms\"/>\nTo demonstrate please tell me what city you are from?\n<break time=\"5000ms\"/>\nHow is the weather?\n<break time=\"5000ms\"/>\nThanks for using our solution. Goodbye.\n</speak>"
+                "Text": "Lambda function invoked successfully.\n"
             },
             "Identifier": "07273109-a75a-4742-aaae-ce35603c31fc",
             "Type": "MessageParticipant",
             "Transitions": {
-                "NextAction": "99458f47-6941-48ce-9b90-fdf184759b22",
+                "NextAction": "Play 100 mins of silence",
                 "Errors": [
                     {
                         "NextAction": "99458f47-6941-48ce-9b90-fdf184759b22",
@@ -193,7 +258,7 @@
         },
         {
             "Parameters": {
-                "LambdaFunctionARN": "arn:aws:lambda:us-east-1:126597142151:function:pd-test-3-kvsConsumerTrigger-1VMZGG6KHAFPB",
+                "LambdaFunctionARN": "arn:aws:lambda:us-east-1:764576996850:function:connect-test-j-kvsDgTrigger-xjRHteWE0fXO",
                 "InvocationTimeLimitSeconds": "8",
                 "ResponseValidation": {
                     "ResponseType": "STRING_MAP"
@@ -214,9 +279,8 @@
         {
             "Parameters": {
                 "Attributes": {
-                    "tag": "sometag1 sometag2",
-                    "model": "nova",
-                    "callback": "https://www.example.com/some/path/{contact-id}"
+                    "dg_model": "nova",
+                    "dg_callback": "https://YOUR-ENDPOINT-HERE.ngrok-free.app/{contact-id}"
                 },
                 "TargetContact": "Current"
             },

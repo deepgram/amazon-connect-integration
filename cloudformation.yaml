@@ -6,10 +6,10 @@ Parameters:
     Description: The Deepgram API key that will be used for transcription
     Type: String
   vpcId:
-    Description: VPC where the ECS service will be deployed
+    Description: VPC where the resources will be deployed
     Type: AWS::EC2::VPC::Id
   subnets:
-    Description: Subnets where the ECS service will be deployed
+    Description: Subnets where the resources will be deployed
     Type: List<AWS::EC2::Subnet::Id>
 
 Resources:
@@ -26,10 +26,22 @@ Resources:
             Action:
               - "sts:AssumeRole"
       ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
+
+  kvsDgTriggerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    DeletionPolicy: "Retain" # TODO remove this. It's just for faster development since deleting a lambda in a VPC takes forever
+    Properties:
+      GroupDescription: Security group for kvs-dg-trigger Lambda function
+      VpcId: !Ref vpcId
+      SecurityGroupEgress:
+        - CidrIp: 0.0.0.0/0
+          Description: Allow all outbound traffic
+          IpProtocol: "-1"
 
   kvsDgTrigger:
     Type: "AWS::Lambda::Function"
+    DeletionPolicy: "Retain" # TODO remove this. It's just for faster development since deleting a lambda in a VPC takes forever
     Properties:
       Role: !GetAtt kvsDgTriggerRole.Arn
       Timeout: 900
@@ -41,6 +53,10 @@ Resources:
       PackageType: "Image"
       Code:
         ImageUri: 396185571030.dkr.ecr.us-east-1.amazonaws.com/kvs-dg-trigger:latest
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref kvsDgTriggerSecurityGroup
+        SubnetIds: !Ref subnets
 
   kvsDgIntegratorEcsCluster:
     Type: "AWS::ECS::Cluster"
@@ -127,7 +143,7 @@ Resources:
       RuntimePlatform:
         OperatingSystemFamily: LINUX
 
-  kvsDgIntegratorSecurityGroup:
+  kvsDgIntegratorEcsServiceSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Security group for kvs-dg-integrator Fargate task
@@ -140,7 +156,7 @@ Resources:
         - IpProtocol: tcp
           FromPort: 80
           ToPort: 80
-          CidrIp: 0.0.0.0/0
+          SourceSecurityGroupId: !Ref kvsDgIntegratorLoadBalancerSecurityGroup
 
   kvsDgIntegratorEcsService:
     Type: AWS::ECS::Service
@@ -155,17 +171,33 @@ Resources:
           AssignPublicIp: ENABLED
           Subnets: !Ref subnets
           SecurityGroups:
-            - !Ref kvsDgIntegratorSecurityGroup
+            - !Ref kvsDgIntegratorEcsServiceSecurityGroup
       LoadBalancers:
         - TargetGroupArn: !Ref kvsDgIntegratorLoadBalancerTargetGroup
           ContainerName: kvs-dg-integrator-container
           ContainerPort: 80
 
+  kvsDgIntegratorLoadBalancerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for kvs-dg-integrator load balancer
+      VpcId: !Ref vpcId
+      SecurityGroupEgress:
+        - CidrIp: 0.0.0.0/0
+          Description: Allow all outbound traffic
+          IpProtocol: "-1"
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          SourceSecurityGroupId: !Ref kvsDgTriggerSecurityGroup
+
   kvsDgIntegratorLoadBalancer:
     Type: "AWS::ElasticLoadBalancingV2::LoadBalancer"
     Properties:
+      Scheme: internal
       Subnets: !Ref subnets
-      SecurityGroups: [!Ref kvsDgIntegratorSecurityGroup]
+      SecurityGroups: [!Ref kvsDgIntegratorLoadBalancerSecurityGroup]
 
   kvsDgIntegratorLoadBalancerTargetGroup:
     Type: "AWS::ElasticLoadBalancingV2::TargetGroup"

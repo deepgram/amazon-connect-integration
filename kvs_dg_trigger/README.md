@@ -15,7 +15,7 @@ Then spin up the lambda with a CloudFormation template:
     Type: "AWS::Lambda::Function"
     Properties:
       Role: !GetAtt kvsDgTriggerRole.Arn
-      Timeout: 30
+      Timeout: 900
       Environment:
         Variables:
           # Swap in the correct domain

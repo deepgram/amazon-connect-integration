@@ -2,7 +2,6 @@ from collections.abc import Mapping
 import json
 import os
 import time
-import boto3
 import requests
 
 
@@ -15,8 +14,9 @@ def handler(event, context):
 
     contact_data = event["Details"]["ContactData"]
     contact_attrs = contact_data.get("Attributes")
+    contact_id = contact_data["ContactId"]
 
-    dg_params = get_dg_params(contact_attrs)
+    dg_params = get_dg_params(contact_attrs, contact_id)
     if dg_params is None:
         print(f"ERROR: unable to parse `dg_` contact attributes")
         return lambda_result(False)
@@ -28,7 +28,7 @@ def handler(event, context):
     kvs_stream_info = contact_data["MediaStreams"]["Customer"]["Audio"]
 
     integrator_payload = {
-        "contactId": contact_data["ContactId"],
+        "contactId": contact_id,
         "kvsStream": {
             "arn": kvs_stream_info["StreamARN"],
             "startFragmentNumber": kvs_stream_info["StartFragmentNumber"],
@@ -47,16 +47,12 @@ def lambda_result(is_success):
     return {"lambdaResult": result_text}
 
 
-def get_dg_params(contact_attrs):
+def get_dg_params(contact_attrs, contact_id):
     """
-        Takes in the dictionary of contact attributes and returns the DG params. The DG params are the
-        query parameters that will ultimately be passed to the Deepgram streaming API. They are
-        represented in the contact attributes as attributes whose keys begin with `dg_`. This function
-        returns them as a dictionary.
-
-        See `lambda_function_test.py` for an example.o work with async programming like in Rust's tokio::time::interval.tick(), an equivalent can be using asyncio.sleep() which is a coroutine that completes after a given delay.
-
-    Here is an equivalent async
+    Takes in the dictionary of contact attributes and the contact id and returns the DG params. The
+    DG params are the query parameters that will ultimately be passed to the Deepgram streaming API.
+    They are represented in the contact attributes as attributes whose keys begin with `dg_`. This
+    function returns them as a dictionary. See `lambda_function_test.py` for an example.
     """
 
     if contact_attrs is None:
@@ -103,6 +99,18 @@ def get_dg_params(contact_attrs):
         else:
             dg_params[dg_param_key] = dg_param_values
 
+    if "callback" in dg_params:
+        unsubstituted_callback = dg_params["callback"]
+        if isinstance(unsubstituted_callback, list):
+            print(f"ERROR: more than one callback provided")
+            return None
+
+        assert isinstance(unsubstituted_callback, str)
+
+        dg_params["callback"] = unsubstituted_callback.replace(
+            "{contact-id}", contact_id
+        )
+
     return dg_params
 
 
@@ -112,11 +120,6 @@ def start_integrator_session(payload):
     True if the session was started successfully, False if not.
     """
     print(f"Attempting to start integrator session with payload {payload}")
-
-    integrator_lambda = os.getenv("KVS_DG_INTEGRATOR_LAMBDA")
-    if integrator_lambda:
-        # Running integrator as lambda for testing purposes
-        return start_lambda_integrator_session(integrator_lambda, payload)
 
     integrator_domain = os.getenv("KVS_DG_INTEGRATOR_DOMAIN")
     if not integrator_domain:
@@ -152,20 +155,6 @@ def start_integrator_session(payload):
             return False
 
     return True
-
-
-def start_lambda_integrator_session(lambda_function_name, payload):
-    lambda_client = boto3.client("lambda")
-    response = lambda_client.invoke(
-        FunctionName=lambda_function_name,
-        InvocationType="Event",
-        Payload=json.dumps(payload),
-    )
-    if response["StatusCode"] == 202:
-        return True
-    else:
-        print(f"ERROR: Got error response from integrator lambda: {response}")
-        return False
 
 
 def start_fargate_integrator_session(integrator_domain, payload):

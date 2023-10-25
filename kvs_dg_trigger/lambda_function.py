@@ -22,10 +22,6 @@ def handler(event, context):
     if dg_params is None:
         print(f"ERROR: unable to parse `dg_` contact attributes")
         return lambda_result(False)
-    if len(dg_params) == 0:
-        print(
-            "No `dg_` contact attributes were set. You can add some to customize Deepgram."
-        )
 
     kvs_stream_info = contact_data["MediaStreams"]["Customer"]["Audio"]
 
@@ -64,6 +60,10 @@ def get_dg_params(contact_attrs, contact_id):
         return None
 
     dg_params = contact_attrs_to_dg_params(contact_attrs)
+    if len(dg_params) == 0:
+        print(
+            "No `dg_` contact attributes were set. You can add some to customize Deepgram."
+        )
 
     if "callback" in dg_params and isinstance(dg_params["callback"], list):
         print("ERROR: more than one callback provided")

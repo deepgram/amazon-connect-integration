@@ -48,6 +48,7 @@ Resources:
       Environment:
         Variables:
           KVS_DG_INTEGRATOR_DOMAIN: !GetAtt kvsDgIntegratorLoadBalancer.DNSName
+          LOG_LEVEL: "info"
           # LOAD_TEST_NUM_SESSIONS: "20" # load testing only
           # LOAD_TEST_INTERVAL_MS: "15000" # load testing only
       PackageType: "Image"

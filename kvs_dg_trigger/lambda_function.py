@@ -3,15 +3,26 @@ import json
 import os
 import time
 import requests
+import logging
 
 INTEGRATION_TAG = "dg_amazonconnect"
+LOG_LEVELS = {
+    "debug": logging.DEBUG,
+    "info": logging.INFO,
+    "warning": logging.WARNING,
+    "error": logging.ERROR,
+}
+
+logger = logging.getLogger()
+log_level = LOG_LEVELS[os.getenv("LOG_LEVEL", "info")]
+logger.setLevel(log_level)
 
 
 def handler(event, context):
-    print(f"Received event from Amazon Connect: {event}")
+    logger.info(f"Received event from Amazon Connect: {event}")
 
     if event["Name"] != "ContactFlowEvent":
-        print(f"ERROR: Unexpected event name: {event['Name']}")
+        logger.error(f"Unexpected event name: {event['Name']}")
         return lambda_result(False)
 
     contact_data = event["Details"]["ContactData"]
@@ -20,7 +31,7 @@ def handler(event, context):
 
     dg_params = get_dg_params(contact_attrs, contact_id)
     if dg_params is None:
-        print(f"ERROR: unable to parse `dg_` contact attributes")
+        logger.error(f"unable to parse `dg_` contact attributes")
         return lambda_result(False)
 
     kvs_stream_info = contact_data["MediaStreams"]["Customer"]["Audio"]
@@ -40,7 +51,7 @@ def handler(event, context):
 
 def lambda_result(is_success):
     result_text = "success" if is_success else "fail"
-    print(f"Returning lambda result: {result_text}")
+    logger.info(f"Returning lambda result: {result_text}")
 
     return {"lambdaResult": result_text}
 
@@ -56,17 +67,17 @@ def get_dg_params(contact_attrs, contact_id):
     if contact_attrs is None:
         contact_attrs = dict()
     if not isinstance(contact_attrs, Mapping):
-        print("ERROR: expected contact attributes to be dictionary")
+        logger.error("Expected contact attributes to be dictionary")
         return None
 
     dg_params = contact_attrs_to_dg_params(contact_attrs)
     if len(dg_params) == 0:
-        print(
+        logger.info(
             "No `dg_` contact attributes were set. You can add some to customize Deepgram."
         )
 
     if "callback" in dg_params and isinstance(dg_params["callback"], list):
-        print("ERROR: more than one callback provided")
+        logger.error("More than one callback provided")
         return None
 
     inject_contact_id_into_callback(dg_params, contact_id)
@@ -157,28 +168,29 @@ def start_integrator_session(payload):
     Tells the integrator to begin sending audio from Kinesis Video Streams to Deepgram. Returns
     True if the session was started successfully, False if not.
     """
-    print(f"Attempting to start integrator session with payload {payload}")
+    logger.info(f"Attempting to start integrator session with payload {payload}")
 
     integrator_domain = os.getenv("KVS_DG_INTEGRATOR_DOMAIN")
     if not integrator_domain:
-        print("ERROR: please provide KVS_DG_INTEGRATOR_DOMAIN env variable")
+        logger.error("Please provide KVS_DG_INTEGRATOR_DOMAIN env variable")
         return False
+    logger.info(f"KVS_INTEGRATOR_DOMAIN = {integrator_domain}")
 
     load_test_num_sessions = os.getenv("LOAD_TEST_NUM_SESSIONS")
     num_sessions = int(load_test_num_sessions) if load_test_num_sessions else 1
     if num_sessions < 1:
-        print("LOAD_TEST_NUM_SESSIONS must not be less than 1")
+        logger.error("LOAD_TEST_NUM_SESSIONS must not be less than 1")
         return False
 
     load_test_inverval_ms = os.getenv("LOAD_TEST_INTERVAL_MS")
     interval_ms = int(load_test_inverval_ms) if load_test_inverval_ms else 0
     if interval_ms < 0:
-        print("LOAD_TEST_INTERVAL_MS must not be negative")
+        logger.error("LOAD_TEST_INTERVAL_MS must not be negative")
         return False
     interval_secs = interval_ms / 1000
 
     if num_sessions != 1:
-        print(
+        logger.info(
             f"Running load test with {num_sessions} sessions at a {interval_ms}ms interval"
         )
 
@@ -196,22 +208,20 @@ def start_integrator_session(payload):
 
 
 def start_fargate_integrator_session(integrator_domain, payload):
-    print(f"Hitting integrator at domain: {integrator_domain}")
-
     url = f"http://{integrator_domain}/start-session"
     headers = {"Content-Type": "application/json"}
 
     try:
         response = requests.post(url, headers=headers, data=json.dumps(payload))
         if response.status_code == 200:
-            print("Successfully started integrator session.")
+            logger.info("Successfully started integrator session.")
         else:
-            print(
-                f"ERROR: Integrator responded with {response.status_code}: {response.text}"
+            logger.error(
+                f"Integrator responded with {response.status_code}: {response.text}"
             )
             return False
     except Exception as err:
-        print(f"Error sending request to integrator: {err}")
+        logger.error(f"Error sending request to integrator: {err}")
         return False
 
     return True

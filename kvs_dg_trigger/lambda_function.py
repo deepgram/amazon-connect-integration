@@ -4,6 +4,8 @@ import os
 import time
 import requests
 
+INTEGRATION_TAG = "dg_amazonconnect"
+
 
 def handler(event, context):
     print(f"Received event from Amazon Connect: {event}")
@@ -56,10 +58,27 @@ def get_dg_params(contact_attrs, contact_id):
     """
 
     if contact_attrs is None:
-        return dict()
+        contact_attrs = dict()
     if not isinstance(contact_attrs, Mapping):
         print("ERROR: expected contact attributes to be dictionary")
         return None
+
+    dg_params = contact_attrs_to_dg_params(contact_attrs)
+
+    if "callback" in dg_params and isinstance(dg_params["callback"], list):
+        print("ERROR: more than one callback provided")
+        return None
+
+    inject_contact_id_into_callback(dg_params, contact_id)
+
+    add_integration_tag(dg_params)
+
+    return dg_params
+
+
+def contact_attrs_to_dg_params(contact_attrs):
+    if contact_attrs is None:
+        return dict()
 
     dg_params = dict()
 
@@ -99,11 +118,12 @@ def get_dg_params(contact_attrs, contact_id):
         else:
             dg_params[dg_param_key] = dg_param_values
 
+    return dg_params
+
+
+def inject_contact_id_into_callback(dg_params, contact_id):
     if "callback" in dg_params:
         unsubstituted_callback = dg_params["callback"]
-        if isinstance(unsubstituted_callback, list):
-            print(f"ERROR: more than one callback provided")
-            return None
 
         assert isinstance(unsubstituted_callback, str)
 
@@ -111,7 +131,25 @@ def get_dg_params(contact_attrs, contact_id):
             "{contact-id}", contact_id
         )
 
-    return dg_params
+
+def add_integration_tag(dg_params):
+    tags = []
+    if "tag" in dg_params:
+        preexisting_tags = dg_params["tag"]
+        if isinstance(preexisting_tags, str):
+            tags.append(preexisting_tags)
+        elif isinstance(preexisting_tags, list):
+            tags.extend(preexisting_tags)
+        else:
+            raise Exception(f"Tags list has unexpected type: {type(preexisting_tags)}")
+
+    if INTEGRATION_TAG not in tags:
+        tags.append(INTEGRATION_TAG)
+
+    if len(tags) == 1:
+        dg_params["tag"] = tags[0]
+    else:
+        dg_params["tag"] = tags
 
 
 def start_integrator_session(payload):

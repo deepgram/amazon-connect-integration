@@ -9,4 +9,4 @@ FROM openjdk:17
 RUN mkdir /app
 COPY --from=BUILD /home/gradle/src/build/libs/*.jar /app/app.jar
 EXPOSE 8080
-ENTRYPOINT java -jar /app/app.jar
+ENTRYPOINT ["java", "-XX:+UseContainerSupport", "-XX:MaxRAMPercentage=90.0", "-XshowSettings:vm", "-jar", "/app/app.jar"]

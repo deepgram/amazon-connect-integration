@@ -136,10 +136,10 @@ Resources:
               Protocol: tcp
               AppProtocol: http
       Cpu: "256"
+      Memory: "512"
       ExecutionRoleArn: !GetAtt kvsDgIntegratorExecutionRole.Arn
       TaskRoleArn: !GetAtt kvsDgIntegratorTaskRole.Arn
       Family: kvs-dg-integrator-task-family
-      Memory: "512"
       NetworkMode: awsvpc
       RequiresCompatibilities:
         - FARGATE

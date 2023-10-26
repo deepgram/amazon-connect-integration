@@ -3,6 +3,7 @@ package com.deepgram.kvsdgintegrator;
 import org.apache.commons.lang3.Validate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.ThreadContext;
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
 import org.reactivestreams.Publisher;
@@ -74,9 +75,13 @@ public class DeepgramStreamingClient implements AutoCloseable {
 
 		CompletableFuture<Void> future = new CompletableFuture<>();
 
+		String requestId = ThreadContext.get("requestId");
 		final WebSocketClient wsClient = new WebSocketClient(deepgramStreamingUrl, deepgramHeaders) {
 			@Override
 			public void onOpen(ServerHandshake serverHandshake) {
+				// Propagate request id into the websocket thread so that it appears in logs
+				ThreadContext.put("requestId", requestId);
+
 				registerSubscriber(this, publisher, future);
 			}
 
@@ -96,7 +101,7 @@ public class DeepgramStreamingClient implements AutoCloseable {
 		};
 		wsClient.connect();
 
-		logger.info("Opening connection to Deepgram...");
+		logger.info("Opening connection to Deepgram");
 
 		return future;
 	}

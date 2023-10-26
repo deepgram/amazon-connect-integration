@@ -124,6 +124,8 @@ Resources:
           Environment:
             - Name: DEEPGRAM_API_KEY
               Value: !Ref deepgramApiKey
+            - Name: LOG_LEVEL
+              Value: "info"
             - Name: APP_REGION
               Value: !Ref "AWS::Region"
             # - Name: ENFORCE_REALTIME # load testing only

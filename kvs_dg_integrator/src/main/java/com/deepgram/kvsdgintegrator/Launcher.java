@@ -8,12 +8,14 @@ import com.sun.net.httpserver.HttpServer;
 import org.apache.commons.lang3.Validate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.ThreadContext;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
-import java.util.concurrent.Executors;
+import java.util.UUID;
+import java.util.concurrent.*;
 
 public class Launcher {
 	private static final Logger logger = LogManager.getLogger(Launcher.class);
@@ -29,6 +31,7 @@ public class Launcher {
 		String enforceRealtimeStr = System.getenv("ENFORCE_REALTIME");
 		boolean enforceRealtime = enforceRealtimeStr != null && enforceRealtimeStr.equalsIgnoreCase("true");
 		logger.info("Enforce realtime = " + enforceRealtime);
+
 
 		HttpServer server = HttpServer.create(new InetSocketAddress(80), 0);
 		server.createContext("/health-check", httpExchange -> {
@@ -57,6 +60,17 @@ public class Launcher {
 
 		@Override
 		public void handle(HttpExchange httpExchange) {
+			String requestId = UUID.randomUUID().toString();
+			ThreadContext.put("requestId", requestId);
+
+			try {
+				handleInner(httpExchange);
+			} finally {
+				ThreadContext.clearAll();
+			}
+		}
+
+		private void handleInner(HttpExchange httpExchange) {
 			logger.info("Received HTTP request");
 
 			IntegratorArguments integratorArguments;

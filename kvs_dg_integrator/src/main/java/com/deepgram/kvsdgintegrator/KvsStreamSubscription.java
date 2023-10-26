@@ -3,6 +3,7 @@ package com.deepgram.kvsdgintegrator;
 import org.apache.commons.lang3.Validate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.ThreadContext;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 
@@ -41,8 +42,7 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class KvsStreamSubscription implements Subscription {
 
-	//TODO: Make sure these threads are not outliving the KVS streams
-	private final ExecutorService executor = Executors.newFixedThreadPool(1); // Change nThreads here!! used in SubmissionPublisher not subscription
+	private final ExecutorService executor = Executors.newSingleThreadExecutor();
 	private final AtomicLong demand = new AtomicLong(0); // state container
 	private final Subscriber<? super ByteBuffer> subscriber;
 	private final KvsStreamTrack fromCustomerTrack;
@@ -75,8 +75,12 @@ public class KvsStreamSubscription implements Subscription {
 		}
 
 		demand.getAndAdd(n);
-		//We need to invoke this in a separate thread because the call to subscriber.onNext(...) is recursive
+
+		String requestId = ThreadContext.get("requestId");
 		executor.submit(() -> {
+			// Propagate request ID to the newly created thread so it appears in log messages
+			ThreadContext.put("requestId", requestId);
+
 			try {
 				// If enforceRealtime=true, we have to track the last published audio time so we can ensure a delay of at
 				// least 64ms between publishing each 64ms buffer

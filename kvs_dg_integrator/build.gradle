@@ -23,11 +23,14 @@ dependencies {
             'org.java-websocket:Java-WebSocket:1.5.4',
             'org.apache.logging.log4j:log4j-core:2.20.0',
             'org.apache.logging.log4j:log4j-api:2.20.0',
-            'software.amazon.awssdk:transcribestreaming:2.16.30',
+            'org.apache.logging.log4j:log4j-jcl:2.20.0',
+            'commons-logging:commons-logging:1.2',
+            'org.apache.logging.log4j:log4j-slf4j2-impl:2.21.1',
+            'org.slf4j:slf4j-api:1.7.32',
             'com.amazonaws:aws-java-sdk-kinesisvideo:1.11.987',
-            'com.amazonaws:aws-java-sdk-cloudwatch:1.11.987',
+            'com.amazonaws:aws-java-sdk-cloudwatch:1.11.987', //TODO: try removing
             'com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.15.2',
-            'com.sun.net.httpserver:http:20070405'
+            'com.sun.net.httpserver:http:20070405',
     )
     testImplementation(
             platform('org.junit:junit-bom:5.10.0'),

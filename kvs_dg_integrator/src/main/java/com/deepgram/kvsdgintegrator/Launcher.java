@@ -41,6 +41,10 @@ public class Launcher {
 		boolean enforceRealtime = enforceRealtimeStr != null && enforceRealtimeStr.equalsIgnoreCase("true");
 		logger.info("Enforce realtime = " + enforceRealtime);
 
+		logger.debug("Application warmup started");
+		Warmer.warmUpApplication();
+		logger.debug("Application warmup complete");
+
 		HttpServer server = HttpServer.create(new InetSocketAddress(80), 0);
 		server.createContext("/health-check", httpExchange -> {
 			try (httpExchange) {

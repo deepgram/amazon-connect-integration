@@ -18,7 +18,7 @@ import java.util.Optional;
 /**
  * Streams Amazon Connect calls to Deepgram for transcription. The data flow is:
  * <p>
- * Amazon Connect => AWS KVS => KvsToDgIntegrator => Deepgram
+ * Amazon Connect => AWS KVS => KVS DG Integrator => Deepgram
  *
  * <p>Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.</p>
  * <p>
@@ -41,7 +41,11 @@ public class KvsToDgStreamer {
 	private static final Logger logger = LogManager.getLogger(KvsToDgStreamer.class);
 
 	public static void startKvsToDgStreaming(
-			IntegratorArguments integratorArguments, String deepgramApiKey, boolean enforceRealtime) throws Exception {
+			IntegratorArguments integratorArguments,
+			String deepgramApi,
+			String deepgramApiKey,
+			boolean enforceRealtime
+	) throws Exception {
 		String streamARN = integratorArguments.kvsStream().arn();
 		String startFragmentNum = integratorArguments.kvsStream().startFragmentNumber();
 		String contactId = integratorArguments.contactId();
@@ -53,17 +57,15 @@ public class KvsToDgStreamer {
 		KvsStreamTrack toCustomerTrack = getKvsStreamTrack(
 				streamName, startFragmentNum, KvsUtils.TrackName.AUDIO_TO_CUSTOMER.getName(), contactId);
 
-		try (DeepgramStreamingClient client = new DeepgramStreamingClient(integratorArguments.dgParams(), deepgramApiKey)) {
-			KvsStreamPublisher publisher = new KvsStreamPublisher(fromCustomerTrack, toCustomerTrack, enforceRealtime);
-			client.startStreamingToDeepgram(publisher).get();
-		} catch (Exception e) {
-			logger.error("Error during streaming: ", e);
-			throw e;
-		}
+
+		DeepgramStreamingClient client = new DeepgramStreamingClient(
+				deepgramApi, deepgramApiKey, integratorArguments.dgParams());
+		KvsStreamPublisher publisher = new KvsStreamPublisher(fromCustomerTrack, toCustomerTrack, enforceRealtime);
+		client.startStreamingToDeepgram(publisher).get();
 	}
 
 	private static KvsStreamTrack getKvsStreamTrack(String streamName, String startFragmentNum, String trackName,
-																String contactId) {
+													String contactId) {
 		logger.trace("Creating KVS track object for track %s".formatted(trackName));
 
 		InputStream kvsInputStream = KvsUtils.getInputStreamFromKVS(streamName, REGION, startFragmentNum, getAWSCredentials());

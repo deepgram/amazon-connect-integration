@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
-public class DeepgramStreamingClient implements AutoCloseable {
+public class DeepgramStreamingClient {
 
 	private final URI deepgramStreamingUrl;
 	private final Map<String, String> deepgramHeaders;
@@ -27,9 +27,13 @@ public class DeepgramStreamingClient implements AutoCloseable {
 	private static final Logger logger = LogManager.getLogger(DeepgramStreamingClient.class);
 
 
-	public DeepgramStreamingClient(Map<String, List<String>> dgParams, String deepgramApiKey) throws URISyntaxException {
-		this.deepgramStreamingUrl = getDeepgramStreamingUrl(dgParams);
-		this.deepgramHeaders = getDeepgramHeaders(deepgramApiKey);
+	public DeepgramStreamingClient(String deepgramApi, String deepgramApiKey, Map<String, List<String>> dgParams) throws Exception {
+		Validate.notNull(deepgramApi);
+		Validate.notNull(deepgramApiKey);
+		Validate.notNull(dgParams);
+
+		this.deepgramStreamingUrl = buildDeepgramStreamingUrl(deepgramApi, dgParams);
+		this.deepgramHeaders = buildDeepgramHeaders(deepgramApiKey);
 	}
 
 	/**
@@ -48,10 +52,8 @@ public class DeepgramStreamingClient implements AutoCloseable {
 	 * Also, there are some default query params like `encoding` and `sample_rate` that are the same regardless of
 	 * the `dgParams`.
 	 */
-	private URI getDeepgramStreamingUrl(Map<String, List<String>> dgParams) throws URISyntaxException {
-		String baseUri = "wss://api.deepgram.com/v1/listen";
+	private URI buildDeepgramStreamingUrl(String deepgramApi, Map<String, List<String>> dgParams) throws Exception {
 		StringBuilder queryString = new StringBuilder();
-
 		queryString.append("encoding=linear16&sample_rate=8000&multichannel=true&channels=2");
 
 		for (Map.Entry<String, List<String>> entry : dgParams.entrySet()) {
@@ -63,10 +65,10 @@ public class DeepgramStreamingClient implements AutoCloseable {
 			}
 		}
 
-		return new URI(baseUri + "?" + queryString);
+		return new URI(deepgramApi + "?" + queryString);
 	}
 
-	private Map<String, String> getDeepgramHeaders(String deepgramApiKey) {
+	private Map<String, String> buildDeepgramHeaders(String deepgramApiKey) {
 		return Map.of("Authorization", "Token " + deepgramApiKey);
 	}
 
@@ -87,6 +89,7 @@ public class DeepgramStreamingClient implements AutoCloseable {
 
 			@Override
 			public void onMessage(String message) {
+				logger.debug("Message from Deepgram websocket: " + message);
 			}
 
 			@Override
@@ -101,7 +104,7 @@ public class DeepgramStreamingClient implements AutoCloseable {
 		};
 		wsClient.connect();
 
-		logger.info("Opening connection to Deepgram");
+		logger.info("Connecting to Deepgram at URL: " + deepgramStreamingUrl);
 
 		return future;
 	}
@@ -131,10 +134,5 @@ public class DeepgramStreamingClient implements AutoCloseable {
 				client.close();
 			}
 		});
-	}
-
-	@Override
-	public void close() throws Exception {
-		// TODO: close websocket to Deepgram
 	}
 }

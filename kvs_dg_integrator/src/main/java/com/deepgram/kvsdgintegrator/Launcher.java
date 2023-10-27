@@ -22,6 +22,15 @@ public class Launcher {
 
 	public static void main(String[] args) throws IOException {
 		logger.info("Launching integrator task");
+
+		String deepgramApi = System.getenv("DEEPGRAM_API");
+		if (deepgramApi == null) {
+			deepgramApi = "wss://api.deepgram.com/v1/listen";
+			logger.info("No DEEPGRAM_API environment variable provided. Defaulting to " + deepgramApi);
+		} else {
+			logger.info("Deepgram API = " + deepgramApi);
+		}
+
 		String deepgramApiKey = System.getenv("DEEPGRAM_API_KEY");
 		if (deepgramApiKey == null) {
 			logger.error("This task expects an environment variable DEEPGRAM_API_KEY");
@@ -32,7 +41,6 @@ public class Launcher {
 		boolean enforceRealtime = enforceRealtimeStr != null && enforceRealtimeStr.equalsIgnoreCase("true");
 		logger.info("Enforce realtime = " + enforceRealtime);
 
-
 		HttpServer server = HttpServer.create(new InetSocketAddress(80), 0);
 		server.createContext("/health-check", httpExchange -> {
 			try (httpExchange) {
@@ -41,19 +49,19 @@ public class Launcher {
 				throw new RuntimeException(e);
 			}
 		});
-		server.createContext("/start-session", new StartSessionHandler(deepgramApiKey, enforceRealtime));
+		server.createContext("/start-session", new StartSessionHandler(deepgramApi, deepgramApiKey, enforceRealtime));
 		server.setExecutor(Executors.newCachedThreadPool());
 		server.start();
 	}
 
 	static class StartSessionHandler implements HttpHandler {
+		private final String deepgramApi;
 		private final String deepgramApiKey;
-
 		private final boolean enforceRealtime;
-
 		private static final Logger logger = LogManager.getLogger(StartSessionHandler.class);
 
-		public StartSessionHandler(String deepgramApiKey, boolean enforceRealtime) {
+		public StartSessionHandler(String deepgramApi, String deepgramApiKey, boolean enforceRealtime) {
+			this.deepgramApi = Validate.notNull(deepgramApi);
 			this.deepgramApiKey = Validate.notNull(deepgramApiKey);
 			this.enforceRealtime = enforceRealtime;
 		}
@@ -96,7 +104,8 @@ public class Launcher {
 			logger.info("Integrator Arguments: %s".formatted(integratorArguments));
 
 			try {
-				KvsToDgStreamer.startKvsToDgStreaming(integratorArguments, this.deepgramApiKey, this.enforceRealtime);
+				KvsToDgStreamer.startKvsToDgStreaming(
+						integratorArguments, this.deepgramApi, this.deepgramApiKey, this.enforceRealtime);
 			} catch (Exception e) {
 				logger.error("Exception during integrator session", e);
 			}

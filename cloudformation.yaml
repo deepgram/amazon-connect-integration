@@ -122,6 +122,8 @@ Resources:
               awslogs-group: kvs-dg-integrator
               awslogs-create-group: "true"
           Environment:
+            - Name: DEEPGRAM_API
+              Value: "wss://api.deepgram.com/v1/listen"
             - Name: DEEPGRAM_API_KEY
               Value: !Ref deepgramApiKey
             - Name: LOG_LEVEL

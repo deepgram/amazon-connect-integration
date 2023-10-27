@@ -16,3 +16,10 @@ docker build --platform linux/amd64 -t 396185571030.dkr.ecr.us-east-1.amazonaws.
 
 Then spin up the Fargate task and all its associated resources
 using `cloudformation.yaml`.
+
+If you don't need to recreate the whole stack, you can also just redeploy the
+Fargate task:
+
+```shell
+aws ecs update-service --cluster arn:aws:ecs:us-east-1:396185571030:cluster/kvs-dg-integrator-cluster --service <service-arn> --force-new-deployment
+```

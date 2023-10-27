@@ -49,8 +49,8 @@ Resources:
         Variables:
           KVS_DG_INTEGRATOR_DOMAIN: !GetAtt kvsDgIntegratorLoadBalancer.DNSName
           LOG_LEVEL: "info"
-          # LOAD_TEST_NUM_SESSIONS: "20" # load testing only
-          # LOAD_TEST_INTERVAL_MS: "15000" # load testing only
+          # LOAD_TEST_NUM_SESSIONS: "20"      # load testing only
+          # LOAD_TEST_INTERVAL_MS: "15000"    # load testing only
       PackageType: "Image"
       Code:
         ImageUri: 396185571030.dkr.ecr.us-east-1.amazonaws.com/kvs-dg-trigger:latest
@@ -63,8 +63,8 @@ Resources:
     Type: "AWS::ECS::Cluster"
     Properties:
       ClusterName: kvs-dg-integrator-cluster
-      # ClusterSettings:
-      #   - Name: containerInsights # load testing only
+      # ClusterSettings:              # load testing only
+      #   - Name: containerInsights
       #     Value: enabled
 
   kvsDgIntegratorExecutionRole:
@@ -130,7 +130,7 @@ Resources:
               Value: "info"
             - Name: APP_REGION
               Value: !Ref "AWS::Region"
-            # - Name: ENFORCE_REALTIME # load testing only
+            # - Name: ENFORCE_REALTIME    # load testing only
             #   Value: "true"
           PortMappings:
             - HostPort: 80
@@ -173,6 +173,7 @@ Resources:
       LaunchType: FARGATE
       NetworkConfiguration:
         AwsvpcConfiguration:
+          # Set this to DISABLED if you're using private subnets with a NAT gateway
           AssignPublicIp: ENABLED
           Subnets: !Ref subnets
           SecurityGroups:

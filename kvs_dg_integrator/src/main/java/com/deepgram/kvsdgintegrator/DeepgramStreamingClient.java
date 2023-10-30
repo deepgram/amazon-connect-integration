@@ -1,17 +1,16 @@
 package com.deepgram.kvsdgintegrator;
 
+import com.deepgram.kvsdgintegrator.KvsToDgStreamer.KvsStreamPublisher;
 import org.apache.commons.lang3.Validate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.ThreadContext;
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
-import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URLEncoder;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
@@ -19,11 +18,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
+
 public class DeepgramStreamingClient {
 
 	private final URI deepgramStreamingUrl;
 	private final Map<String, String> deepgramHeaders;
-
 	private static final Logger logger = LogManager.getLogger(DeepgramStreamingClient.class);
 
 
@@ -53,6 +52,16 @@ public class DeepgramStreamingClient {
 	 * the `dgParams`.
 	 */
 	private URI buildDeepgramStreamingUrl(String deepgramApi, Map<String, List<String>> dgParams) throws Exception {
+		if (dgParams.containsKey("encoding")
+			|| dgParams.containsKey("sample_rate")
+			|| dgParams.containsKey("multichannel")
+			|| dgParams.containsKey("channels")
+		) {
+			throw new Exception(
+					"DG params may not contain `encoding`, `sample_rate`, `multichannel`, or `channels`."
+					+ " These are inferred by the integrator instead.");
+		}
+
 		StringBuilder queryString = new StringBuilder();
 		queryString.append("encoding=linear16&sample_rate=8000&multichannel=true&channels=2");
 
@@ -72,8 +81,8 @@ public class DeepgramStreamingClient {
 		return Map.of("Authorization", "Token " + deepgramApiKey);
 	}
 
-	public CompletableFuture<Void> startStreamingToDeepgram(final Publisher<ByteBuffer> publisher) {
-		Validate.notNull(publisher);
+	public CompletableFuture<Void> startStreamingToDeepgram(final KvsStreamPublisher kvsStreamPublisher) {
+		Validate.notNull(kvsStreamPublisher);
 
 		CompletableFuture<Void> future = new CompletableFuture<>();
 
@@ -84,17 +93,26 @@ public class DeepgramStreamingClient {
 				// Propagate request id into the websocket thread so that it appears in logs
 				ThreadContext.put("requestId", requestId);
 
-				registerSubscriber(this, publisher, future);
+				registerSubscriber(this, kvsStreamPublisher, future);
 			}
 
 			@Override
 			public void onMessage(String message) {
-				logger.debug("Message from Deepgram websocket: " + message);
+				logger.debug("Deepgram result: " + message);
 			}
 
 			@Override
 			public void onClose(int i, String s, boolean b) {
-				future.complete(null);
+				logger.debug("Websocket was closed. Initiated by DG? %s; Code: %s; Reason: %s".formatted(b, i, s));
+
+				if (i == 1000) {
+					future.complete(null);
+				} else {
+					future.completeExceptionally(
+							new Exception(
+									"Websocket closed with error code. "
+									+ "Initiated by DG? %s; Code: %s; Reason: %s".formatted(b, i, s)));
+				}
 			}
 
 			@Override
@@ -111,9 +129,9 @@ public class DeepgramStreamingClient {
 
 	private void registerSubscriber(
 			final WebSocketClient client,
-			final Publisher<ByteBuffer> publisher,
+			final KvsStreamPublisher kvsStreamPublisher,
 			final CompletableFuture<Void> future) {
-		publisher.subscribe(new Subscriber<>() {
+		kvsStreamPublisher.subscribe(new Subscriber<>() {
 			@Override
 			public void onSubscribe(Subscription subscription) {
 				subscription.request(Long.MAX_VALUE);
@@ -131,7 +149,7 @@ public class DeepgramStreamingClient {
 
 			@Override
 			public void onComplete() {
-				client.close();
+				client.send("{ \"type\": \"CloseStream\" }");
 			}
 		});
 	}

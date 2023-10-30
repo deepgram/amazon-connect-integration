@@ -102,10 +102,8 @@ public final class KvsUtils {
                     long trackNumber = frame.getTrackNumber();
                     MkvTrackMetadata metadata = fragmentVisitor.getMkvTrackMetadata(trackNumber);
                     if (trackName.equals(metadata.getTrackName())) {
-                        logger.trace("Returning KVS frame for track %s: %s".formatted(trackName, frame.toString()));
                         return audioBuffer;
                     } else if ("Track_audio/L16".equals(metadata.getTrackName()) && TrackName.AUDIO_FROM_CUSTOMER.getName().equals(trackName)) {
-                        logger.trace("Returning KVS frame for track %s (backward compatible): %s".formatted(trackName, frame.toString()));
                         // backwards compatibility
                         return audioBuffer;
                     }

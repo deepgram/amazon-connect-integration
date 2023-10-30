@@ -17,7 +17,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * 2-channel audio (with FROM_CUSTOMER on the first channel) and publishes them to the Subscriber as a series of
  * {@link ByteBuffer}s.
  *
- * <p>The audio remains in linear16 format with sample of rate of 8000hz, just as it is received from KVS. The emitted
+ * <p>The audio remains in linear16 format with a sample rate of 8000hz, just as it is received from KVS. The emitted
  * {@link ByteBuffer}s are 2048 bytes each. That is:
  * <ul>
  * 	<li>1024 bytes per channel</li>
@@ -41,15 +41,12 @@ import java.util.concurrent.atomic.AtomicLong;
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 public class KvsStreamSubscription implements Subscription {
-
 	private final ExecutorService executor = Executors.newSingleThreadExecutor();
 	private final AtomicLong demand = new AtomicLong(0); // state container
 	private final Subscriber<? super ByteBuffer> subscriber;
 	private final KvsStreamTrack fromCustomerTrack;
 	private final KvsStreamTrack toCustomerTrack;
-
 	private final boolean enforceRealtime;
-
 	private static final Logger logger = LogManager.getLogger(KvsStreamSubscription.class);
 
 	/**

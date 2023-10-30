@@ -15,7 +15,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.util.UUID;
-import java.util.concurrent.*;
+import java.util.concurrent.Executors;
 
 public class Launcher {
 	private static final Logger logger = LogManager.getLogger(Launcher.class);
@@ -41,9 +41,8 @@ public class Launcher {
 		boolean enforceRealtime = enforceRealtimeStr != null && enforceRealtimeStr.equalsIgnoreCase("true");
 		logger.info("Enforce realtime = " + enforceRealtime);
 
-		logger.debug("Application warmup started");
 		Warmer.warmUpApplication();
-		logger.debug("Application warmup complete");
+		logger.info("Application warmup complete");
 
 		HttpServer server = HttpServer.create(new InetSocketAddress(80), 0);
 		server.createContext("/health-check", httpExchange -> {
@@ -83,7 +82,7 @@ public class Launcher {
 		}
 
 		private void handleInner(HttpExchange httpExchange) {
-			logger.info("Received HTTP request");
+			logger.info("Received start-session request");
 
 			IntegratorArguments integratorArguments;
 			try (httpExchange) {
@@ -108,11 +107,14 @@ public class Launcher {
 			logger.info("Integrator Arguments: %s".formatted(integratorArguments));
 
 			try {
-				KvsToDgStreamer.startKvsToDgStreaming(
+				KvsToDgStreamer.doStreamingSession(
 						integratorArguments, this.deepgramApi, this.deepgramApiKey, this.enforceRealtime);
 			} catch (Exception e) {
 				logger.error("Exception during integrator session", e);
+				return;
 			}
+
+			logger.info("Session completed successfully");
 		}
 
 		private void sendSuccess(HttpExchange httpExchange) throws IOException {

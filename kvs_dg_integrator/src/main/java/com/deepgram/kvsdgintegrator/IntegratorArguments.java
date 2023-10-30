@@ -12,7 +12,7 @@ import java.io.IOException;
 import java.util.*;
 
 /**
- * Arguments passed to the `/start-session` endpoint for each new integrator session
+ * Arguments passed in the POST body of the `/start-session` endpoint for each new integrator session
  */
 public record IntegratorArguments(
         String contactId,
@@ -30,7 +30,6 @@ public record IntegratorArguments(
     }
 
     private static class DgParamsDeserializer extends JsonDeserializer<Map<String, List<String>>> {
-
         @Override
         public Map<String, List<String>> deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
             JsonNode node = p.readValueAsTree();

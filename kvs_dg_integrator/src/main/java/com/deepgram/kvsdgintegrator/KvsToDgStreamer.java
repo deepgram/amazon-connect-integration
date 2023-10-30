@@ -19,7 +19,6 @@ import java.util.Optional;
  * Streams Amazon Connect calls to Deepgram for transcription. The data flow is:
  * <p>
  * Amazon Connect => AWS KVS => KVS DG Integrator => Deepgram
- *
  * <p>Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.</p>
  * <p>
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this
@@ -40,7 +39,10 @@ public class KvsToDgStreamer {
 	private static final Regions REGION = Regions.fromName(System.getenv("APP_REGION"));
 	private static final Logger logger = LogManager.getLogger(KvsToDgStreamer.class);
 
-	public static void startKvsToDgStreaming(
+	/**
+	 * Streams a call from KVS to Deepgram, blocking until the streaming session is finished.
+	 */
+	public static void doStreamingSession(
 			IntegratorArguments integratorArguments,
 			String deepgramApi,
 			String deepgramApiKey,
@@ -57,15 +59,19 @@ public class KvsToDgStreamer {
 		KvsStreamTrack toCustomerTrack = getKvsStreamTrack(
 				streamName, startFragmentNum, KvsUtils.TrackName.AUDIO_TO_CUSTOMER.getName(), contactId);
 
-
 		DeepgramStreamingClient client = new DeepgramStreamingClient(
 				deepgramApi, deepgramApiKey, integratorArguments.dgParams());
 		KvsStreamPublisher publisher = new KvsStreamPublisher(fromCustomerTrack, toCustomerTrack, enforceRealtime);
+
 		client.startStreamingToDeepgram(publisher).get();
 	}
 
-	private static KvsStreamTrack getKvsStreamTrack(String streamName, String startFragmentNum, String trackName,
-													String contactId) {
+	private static KvsStreamTrack getKvsStreamTrack(
+			String streamName,
+			String startFragmentNum,
+			String trackName,
+			String contactId
+	) {
 		logger.trace("Creating KVS track object for track %s".formatted(trackName));
 
 		InputStream kvsInputStream = KvsUtils.getInputStreamFromKVS(streamName, REGION, startFragmentNum, getAWSCredentials());
@@ -85,12 +91,13 @@ public class KvsToDgStreamer {
 	}
 
 	/**
-	 * Publishes `ByteBuffers` containing merged multichannel audio of the two tracks.
+	 * Publishes {@link ByteBuffer}s containing merged multichannel audio of the two tracks.
 	 */
-	private record KvsStreamPublisher(KvsStreamTrack fromCustomerTrack,
-									  KvsStreamTrack toCustomerTrack,
-									  boolean enforceRealtime) implements Publisher<ByteBuffer> {
-
+	public record KvsStreamPublisher(
+			KvsStreamTrack fromCustomerTrack,
+			KvsStreamTrack toCustomerTrack,
+			boolean enforceRealtime
+	) implements Publisher<ByteBuffer> {
 		@Override
 		public void subscribe(Subscriber<? super ByteBuffer> s) {
 			s.onSubscribe(new KvsStreamSubscription(s, fromCustomerTrack, toCustomerTrack, enforceRealtime));

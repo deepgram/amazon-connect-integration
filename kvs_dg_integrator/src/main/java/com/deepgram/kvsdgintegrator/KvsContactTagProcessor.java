@@ -13,9 +13,7 @@ import java.util.Optional;
  */
 public class KvsContactTagProcessor implements FragmentMetadataVisitor.MkvTagProcessor {
     private static final Logger logger = LogManager.getLogger(KvsContactTagProcessor.class);
-
     private final String contactId;
-
     private boolean sameContact = true;
 
     public KvsContactTagProcessor(String contactId) {

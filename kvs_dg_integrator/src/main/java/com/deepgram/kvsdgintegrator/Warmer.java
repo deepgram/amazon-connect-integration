@@ -15,7 +15,7 @@ public class Warmer {
 	public static void warmUpApplication() {
 		AmazonKinesisVideo amazonKinesisVideo = AmazonKinesisVideoClientBuilder.standard().build();
 		try {
-			String dummyEndpoint = amazonKinesisVideo.getDataEndpoint(new GetDataEndpointRequest()
+			amazonKinesisVideo.getDataEndpoint(new GetDataEndpointRequest()
 					.withAPIName(APIName.GET_MEDIA)
 					.withStreamName("dummy")).getDataEndpoint();
 		} catch(ResourceNotFoundException e) {

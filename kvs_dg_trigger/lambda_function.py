@@ -198,7 +198,7 @@ def start_integrator_session(payload):
         if i != 0:
             time.sleep(interval_secs)
 
-        if not start_fargate_integrator_session(
+        if not make_integrator_request(
             integrator_domain,
             payload,
         ):
@@ -207,7 +207,7 @@ def start_integrator_session(payload):
     return True
 
 
-def start_fargate_integrator_session(integrator_domain, payload):
+def make_integrator_request(integrator_domain, payload):
     url = f"http://{integrator_domain}/start-session"
     headers = {"Content-Type": "application/json"}
 

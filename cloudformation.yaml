@@ -1,16 +1,169 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Description: Enable streaming Amazon Connect calls to Deepgram
 
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: "General Configuration"
+        Parameters:
+          - deepgramApi
+          - deepgramApiKey
+          - vpcId
+          - subnets
+      - Label:
+          default: "Trigger Lambda"
+        Parameters:
+          - kvsDgTriggerImage
+          - kvsDgTriggerLogLevel
+      - Label:
+          default: "Integrator ECS Service"
+        Parameters:
+          - kvsDgIntegratorImage
+          - kvsDgIntegratorLogLevel
+          - kvsDgIntegratorDesiredTaskCount
+          - kvsDgIntegratorTaskCpu
+          - kvsDgIntegratorTaskMemory
+      - Label:
+          default: "Load Testing"
+        Parameters:
+          - loadTestIsEnabled
+          - loadTestNumSessions
+          - loadTestIntervalMs
+
+    ParameterLabels:
+      deepgramApi:
+        default: Deepgram API
+      deepgramApiKey:
+        default: Deepgram API Key
+      vpcId:
+        default: VPC ID
+      subnets:
+        default: Subnets
+      kvsDgTriggerImage:
+        default: Image URI
+      kvsDgTriggerLogLevel:
+        default: Log Level
+      kvsDgIntegratorImage:
+        default: Task Image URI
+      kvsDgIntegratorLogLevel:
+        default: Log Level
+      kvsDgIntegratorDesiredTaskCount:
+        default: Desired Task Count
+      kvsDgIntegratorTaskCpu:
+        default: Task CPU
+      kvsDgIntegratorTaskMemory:
+        default: Task Memory
+      loadTestIsEnabled:
+        default: Enable Load Test
+      loadTestNumSessions:
+        default: Num Sessions
+      loadTestIntervalMs:
+        default: Interval
+
 Parameters:
-  deepgramApiKey:
-    Description: The Deepgram API key that will be used for transcription
+  deepgramApi:
+    Description: The Deepgram endpoint to stream audio to (change this if you're using Deepgram onprem)
     Type: String
+    Default: "wss://api.deepgram.com/v1/listen"
+  deepgramApiKey:
+    Description: Your Deepgram API key
+    Type: String
+    NoEcho: "true"
+    AllowedPattern: "^[a-z0-9]{40}$"
+    ConstraintDescription: "Deepgram API key must be 40 alphanumeric characters (lowercase only)"
   vpcId:
     Description: VPC where the resources will be deployed
     Type: AWS::EC2::VPC::Id
   subnets:
     Description: Subnets where the resources will be deployed
     Type: List<AWS::EC2::Subnet::Id>
+  kvsDgTriggerImage:
+    Description: >
+      Docker image of the trigger lambda. Before running this CloudFormation template, build the
+      image and push it to ECR in the current region. Then set this field to the image you pushed.
+    Type: String
+    Default: "123456789012.dkr.ecr.region.amazonaws.com/image:tag"
+  kvsDgTriggerLogLevel:
+    Description: Logging level for the trigger lambda
+    Type: String
+    Default: "info"
+    AllowedValues:
+      - "debug"
+      - "info"
+      - "warning"
+      - "error"
+  kvsDgIntegratorImage:
+    Description: >
+      Docker image of the integrator task. Before running this CloudFormation template, build the
+      image and push it to ECR in the current region. Then set this field to the image you pushed.
+    Type: String
+    Default: "123456789012.dkr.ecr.region.amazonaws.com/image:tag"
+  kvsDgIntegratorLogLevel:
+    Description: Logging level for the integrator task
+    Type: String
+    Default: "info"
+    AllowedValues:
+      - "trace"
+      - "debug"
+      - "info"
+      - "warn"
+      - "error"
+  kvsDgIntegratorDesiredTaskCount:
+    Description: >
+      The number of integrator tasks that should be running in the ECS service. The load balancer
+      will distribute sessions evenly between these tasks.
+    Type: Number
+    Default: "1"
+  kvsDgIntegratorTaskCpu:
+    Description: >
+      The number of CPU units to allot to each integrator task. The value you choose determines the
+      range of valid values for the memory. See valid cpu/memory combinations here:
+      https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ecs-taskdefinition.html#cfn-ecs-taskdefinition-cpu
+    Type: String
+    Default: "256"
+    AllowedValues:
+      - "256"
+      - "512"
+      - "1024"
+      - "2048"
+      - "4096"
+      - "8192"
+      - "16384"
+  kvsDgIntegratorTaskMemory:
+    Description: >
+      The amount of memory (in MiB) to allot to each integrator task. The value you choose determines the
+      range of valid values for the CPU. See valid cpu/memory combinations here:
+      https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ecs-taskdefinition.html#cfn-ecs-taskdefinition-cpu
+    Type: String
+    Default: "512"
+  loadTestIsEnabled:
+    Description: >
+      Do you want to do a load test? This means your calls will be transcribed multiple times to
+      simulate many simultaneous calls. This can be useful for understanding how your configuration
+      will deal with your expected load.
+    Type: String
+    Default: "no"
+    AllowedValues:
+      - "yes"
+      - "no"
+  loadTestNumSessions:
+    Description: >
+      The number of times to transcribe each call. For example, if you set this to 20 and put a call
+      through the system, that call will be transcribed 20 times, simulating 20 concurrent calls.
+      This parameter is only used if load test is enabled.
+    Type: Number
+    Default: "20"
+  loadTestIntervalMs:
+    Description: >
+      The number of milliseconds to wait before triggering each new transcription session. New sessions
+      will be started at this cadence until `Num Sessions` is reached. This parameter is only used
+      if load test is enabled.
+    Type: Number
+    Default: "15000"
+
+Conditions:
+  IsLoadTestEnabled: !Equals [!Ref loadTestIsEnabled, "yes"]
 
 Resources:
   kvsDgTriggerRole:
@@ -48,12 +201,20 @@ Resources:
       Environment:
         Variables:
           KVS_DG_INTEGRATOR_DOMAIN: !GetAtt kvsDgIntegratorLoadBalancer.DNSName
-          LOG_LEVEL: "info"
-          # LOAD_TEST_NUM_SESSIONS: "20"      # load testing only
-          # LOAD_TEST_INTERVAL_MS: "15000"    # load testing only
+          LOG_LEVEL: !Ref kvsDgTriggerLogLevel
+          LOAD_TEST_NUM_SESSIONS:
+            Fn::If:
+              - IsLoadTestEnabled
+              - !Ref loadTestNumSessions
+              - "1"
+          LOAD_TEST_INTERVAL_MS:
+            Fn::If:
+              - IsLoadTestEnabled
+              - !Ref loadTestIntervalMs
+              - "0"
       PackageType: "Image"
       Code:
-        ImageUri: 396185571030.dkr.ecr.us-east-1.amazonaws.com/kvs-dg-trigger:latest
+        ImageUri: !Ref kvsDgTriggerImage
       VpcConfig:
         SecurityGroupIds:
           - !Ref kvsDgTriggerSecurityGroup
@@ -63,9 +224,13 @@ Resources:
     Type: "AWS::ECS::Cluster"
     Properties:
       ClusterName: kvs-dg-integrator-cluster
-      # ClusterSettings:              # load testing only
-      #   - Name: containerInsights
-      #     Value: enabled
+      ClusterSettings:
+        - Name: containerInsights
+          Value:
+            Fn::If:
+              - IsLoadTestEnabled
+              - "enabled"
+              - "disabled"
 
   kvsDgIntegratorExecutionRole:
     Type: "AWS::IAM::Role"
@@ -113,7 +278,7 @@ Resources:
     Properties:
       ContainerDefinitions:
         - Name: kvs-dg-integrator-container
-          Image: 396185571030.dkr.ecr.us-east-1.amazonaws.com/kvs-dg-integrator:latest
+          Image: !Ref kvsDgIntegratorImage
           LogConfiguration:
             LogDriver: awslogs
             Options:
@@ -123,22 +288,26 @@ Resources:
               awslogs-create-group: "true"
           Environment:
             - Name: DEEPGRAM_API
-              Value: "wss://api.deepgram.com/v1/listen"
+              Value: !Ref deepgramApi
             - Name: DEEPGRAM_API_KEY
               Value: !Ref deepgramApiKey
             - Name: LOG_LEVEL
-              Value: "info"
+              Value: !Ref kvsDgIntegratorLogLevel
             - Name: APP_REGION
               Value: !Ref "AWS::Region"
-            # - Name: ENFORCE_REALTIME    # load testing only
-            #   Value: "true"
+            - Name: ENFORCE_REALTIME
+              Value:
+                Fn::If:
+                  - IsLoadTestEnabled
+                  - "true"
+                  - "false"
           PortMappings:
             - HostPort: 80
               ContainerPort: 80
               Protocol: tcp
               AppProtocol: http
-      Cpu: "256"
-      Memory: "512"
+      Cpu: !Ref kvsDgIntegratorTaskCpu
+      Memory: !Ref kvsDgIntegratorTaskMemory
       ExecutionRoleArn: !GetAtt kvsDgIntegratorExecutionRole.Arn
       TaskRoleArn: !GetAtt kvsDgIntegratorTaskRole.Arn
       Family: kvs-dg-integrator-task-family
@@ -169,11 +338,11 @@ Resources:
     Properties:
       Cluster: !Ref kvsDgIntegratorEcsCluster
       TaskDefinition: !Ref kvsDgIntegratorTaskDefinition
-      DesiredCount: 1
+      DesiredCount: !Ref kvsDgIntegratorDesiredTaskCount
       LaunchType: FARGATE
       NetworkConfiguration:
         AwsvpcConfiguration:
-          # Set this to DISABLED if you're using private subnets with a NAT gateway
+          # Change to DISABLED if you're using private subnets that have access to a NAT gateway
           AssignPublicIp: ENABLED
           Subnets: !Ref subnets
           SecurityGroups:

@@ -31,11 +31,12 @@ This repo enables real-time transcription of Amazon Connect calls with Deepgram,
 Also included is an Amazon Connect contact flow that demonstrates how to use the deployed integration. To run the contact flow:
 
 1. Add the newly deployed trigger Lambda to your Amazon Connect instance ([guide](https://docs.aws.amazon.com/connect/latest/adminguide/connect-lambda-functions.html#add-lambda-function)).
-2. Create a new inbound contact flow and import `sample_contact_flow.json` ([guide](https://docs.aws.amazon.com/connect/latest/adminguide/contact-flow-import-export.html#how-to-import-export-contact-flows)).
-3. In the **Deepgram Configuration** block, go to **Edit Settings** and update `dg_callback` to a URL where you want to receive the transcripts. The transcripts will be sent as POST requests to the URL you provide. For testing, you can use a site like [Beeceptor](https://beeceptor.com/) to create a URL that will display the contents of the POST requests.
-4. In the **Invoke Trigger Lambda** block, go to **Edit Settings** and select the trigger Lambda function from the **Function ARN** dropdown.
-5. Save and publish the contact flow.
-6. Assign the contact flow to a phone number ([guide](https://docs.aws.amazon.com/connect/latest/adminguide/associate-claimed-ported-phone-number-to-flow.html)).
-7. Call into the phone number. After it plays the initial message, say something and watch your callback server to make sure your words are being transcribed. 
+2. Enable live media streaming in your Amazon Connect instance ([guide](https://docs.aws.amazon.com/connect/latest/adminguide/enable-live-media-streams.html)). Choosing **No data retention** is fine, unless you plan to load test the integration with the built-in load testing functionality, in which case you should choose a retention period at least as long as your load test duration.
+3. Create a new inbound contact flow and import `sample_contact_flow.json` ([guide](https://docs.aws.amazon.com/connect/latest/adminguide/contact-flow-import-export.html#how-to-import-export-contact-flows)).
+4. In the **Deepgram Configuration** block, go to **Edit Settings** and update `dg_callback` to a URL where you want to receive the transcripts. The transcripts will be sent as POST requests to the URL you provide. For testing, you can use a site like [Beeceptor](https://beeceptor.com/) to create a URL that will display the contents of the POST requests.
+5. In the **Invoke Trigger Lambda** block, go to **Edit Settings** and select the trigger Lambda function from the **Function ARN** dropdown.
+6. Save and publish the contact flow.
+7. Assign the contact flow to a phone number ([guide](https://docs.aws.amazon.com/connect/latest/adminguide/associate-claimed-ported-phone-number-to-flow.html)).
+8. Call into the phone number. After it plays the initial message, say something and watch your callback server to make sure your words are being transcribed.
 
 More detailed docs to come!

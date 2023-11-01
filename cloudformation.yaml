@@ -136,7 +136,7 @@ Parameters:
       range of valid values for the CPU. See valid cpu/memory combinations here:
       https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ecs-taskdefinition.html#cfn-ecs-taskdefinition-cpu
     Type: String
-    Default: "512"
+    Default: "1024"
   loadTestIsEnabled:
     Description: >
       Do you want to do a load test? This means your calls will be transcribed multiple times to

@@ -183,7 +183,6 @@ Resources:
 
   kvsDgTriggerSecurityGroup:
     Type: AWS::EC2::SecurityGroup
-    DeletionPolicy: "Retain" # TODO remove this. It's just for faster development since deleting a lambda in a VPC takes forever
     Properties:
       GroupDescription: Security group for kvs-dg-trigger Lambda function
       VpcId: !Ref vpcId
@@ -194,7 +193,6 @@ Resources:
 
   kvsDgTrigger:
     Type: "AWS::Lambda::Function"
-    DeletionPolicy: "Retain" # TODO remove this. It's just for faster development since deleting a lambda in a VPC takes forever
     Properties:
       Role: !GetAtt kvsDgTriggerRole.Arn
       Timeout: 900

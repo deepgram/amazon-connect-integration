@@ -1,0 +1,340 @@
+{
+    "Version": "2019-10-30",
+    "StartAction": "856dd865-e5a0-49c6-aacc-55fe53c38a22",
+    "Metadata": {
+        "entryPointPosition": {
+            "x": 20,
+            "y": 18.4
+        },
+        "ActionMetadata": {
+            "Play 1 min of silence": {
+                "position": {
+                    "x": 802.4,
+                    "y": 872.8
+                },
+                "isFriendlyName": true
+            },
+            "Play 100 mins of silence": {
+                "position": {
+                    "x": 521.6,
+                    "y": 871.2
+                },
+                "isFriendlyName": true
+            },
+            "856dd865-e5a0-49c6-aacc-55fe53c38a22": {
+                "position": {
+                    "x": 185.6,
+                    "y": 14.4
+                }
+            },
+            "d5bd7724-4436-4bfc-bd2a-d0bee26963a1": {
+                "position": {
+                    "x": 522.4,
+                    "y": 0
+                }
+            },
+            "4171b9a2-268b-4435-9a35-59dab368e0f5": {
+                "position": {
+                    "x": 522.4,
+                    "y": 416
+                }
+            },
+            "99458f47-6941-48ce-9b90-fdf184759b22": {
+                "position": {
+                    "x": 1129.6,
+                    "y": 949.6
+                }
+            },
+            "6728609a-9707-41f7-a87c-30ac1fde4f4c": {
+                "position": {
+                    "x": 185.6,
+                    "y": 204.8
+                },
+                "toCustomer": true,
+                "fromCustomer": true
+            },
+            "410057d0-9390-486b-bbb4-c4def2a7367c": {
+                "position": {
+                    "x": 524,
+                    "y": 211.2
+                }
+            },
+            "07273109-a75a-4742-aaae-ce35603c31fc": {
+                "position": {
+                    "x": 184,
+                    "y": 867.2
+                }
+            },
+            "3f9659a3-56a5-4f3c-a431-fd9da2306459": {
+                "position": {
+                    "x": 523.2,
+                    "y": 632.8
+                }
+            },
+            "Deepgram Configuration": {
+                "position": {
+                    "x": 187.2,
+                    "y": 412
+                },
+                "isFriendlyName": true,
+                "dynamicParams": []
+            },
+            "Invoke Trigger Lambda": {
+                "position": {
+                    "x": 188,
+                    "y": 632
+                },
+                "isFriendlyName": true,
+                "dynamicMetadata": {}
+            }
+        },
+        "Annotations": [
+            {
+                "type": "default",
+                "id": "799c9e6d-1b0e-4fb2-8167-698165492867",
+                "content": "Configure Deepgram through contact attributes. We can use any parameters available through the Deepgram streaming API. \n\nFor example, we can set \"model=nova\" by setting a contact attribute with key \"dg_model\" and value \"nova\". We can set \"tag=sometag1&tag=sometag2\" by setting a contact attribute with key \"dg_tag\" and value \"sometag1 sometag2\".\n\nThe \"callback\" parameter is where Deepgram will send transcripts. Within this parameter, we can inject the Contact ID of the current call. For example, set key \"dg_callback\" and value \"https://www.example.com/some/path/{contact-id}\"",
+                "actionId": "Deepgram Configuration",
+                "isFolded": true,
+                "position": {
+                    "x": 253.16666666666666,
+                    "y": 721.6666666666666
+                },
+                "size": {
+                    "height": 295,
+                    "width": 300
+                }
+            },
+            {
+                "type": "default",
+                "id": "caab9d14-297d-4117-b598-578b2740f934",
+                "content": "Make sure to point this to your trigger lambda function. You will also need to make the lambda function available to your Connect instance as described here: https://docs.aws.amazon.com/connect/latest/adminguide/connect-lambda-functions.html#add-lambda-function",
+                "actionId": "Invoke Trigger Lambda",
+                "isFolded": true,
+                "position": {
+                    "x": 254.16666666666666,
+                    "y": 996.6666666666666
+                },
+                "size": {
+                    "height": 295,
+                    "width": 300
+                }
+            }
+        ],
+        "name": "Sample Deepgram flow",
+        "description": "",
+        "type": "contactFlow",
+        "status": "saved",
+        "hash": {}
+    },
+    "Actions": [
+        {
+            "Parameters": {
+                "SSML": "<speak>\n<break time=\"5000ms\"/>\n<break time=\"5000ms\"/>\n<break time=\"5000ms\"/>\n<break time=\"5000ms\"/>\n<break time=\"5000ms\"/>\n<break time=\"5000ms\"/>\n<break time=\"5000ms\"/>\n<break time=\"5000ms\"/>\n<break time=\"5000ms\"/>\n<break time=\"5000ms\"/>\n<break time=\"5000ms\"/>\n<break time=\"5000ms\"/>\n</speak>"
+            },
+            "Identifier": "Play 1 min of silence",
+            "Type": "MessageParticipant",
+            "Transitions": {
+                "NextAction": "Play 100 mins of silence",
+                "Errors": [
+                    {
+                        "NextAction": "99458f47-6941-48ce-9b90-fdf184759b22",
+                        "ErrorType": "NoMatchingError"
+                    }
+                ]
+            }
+        },
+        {
+            "Parameters": {
+                "LoopCount": "100"
+            },
+            "Identifier": "Play 100 mins of silence",
+            "Type": "Loop",
+            "Transitions": {
+                "NextAction": "99458f47-6941-48ce-9b90-fdf184759b22",
+                "Conditions": [
+                    {
+                        "NextAction": "Play 1 min of silence",
+                        "Condition": {
+                            "Operator": "Equals",
+                            "Operands": [
+                                "ContinueLooping"
+                            ]
+                        }
+                    },
+                    {
+                        "NextAction": "99458f47-6941-48ce-9b90-fdf184759b22",
+                        "Condition": {
+                            "Operator": "Equals",
+                            "Operands": [
+                                "DoneLooping"
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "Parameters": {
+                "FlowLoggingBehavior": "Enabled"
+            },
+            "Identifier": "856dd865-e5a0-49c6-aacc-55fe53c38a22",
+            "Type": "UpdateFlowLoggingBehavior",
+            "Transitions": {
+                "NextAction": "d5bd7724-4436-4bfc-bd2a-d0bee26963a1"
+            }
+        },
+        {
+            "Parameters": {
+                "Text": "This call demonstrates real time transcription with Deepgram."
+            },
+            "Identifier": "d5bd7724-4436-4bfc-bd2a-d0bee26963a1",
+            "Type": "MessageParticipant",
+            "Transitions": {
+                "NextAction": "6728609a-9707-41f7-a87c-30ac1fde4f4c",
+                "Errors": [
+                    {
+                        "NextAction": "99458f47-6941-48ce-9b90-fdf184759b22",
+                        "ErrorType": "NoMatchingError"
+                    }
+                ]
+            }
+        },
+        {
+            "Parameters": {
+                "Text": "Error setting Deepgram contact attributes."
+            },
+            "Identifier": "4171b9a2-268b-4435-9a35-59dab368e0f5",
+            "Type": "MessageParticipant",
+            "Transitions": {
+                "NextAction": "99458f47-6941-48ce-9b90-fdf184759b22",
+                "Errors": [
+                    {
+                        "NextAction": "99458f47-6941-48ce-9b90-fdf184759b22",
+                        "ErrorType": "NoMatchingError"
+                    }
+                ]
+            }
+        },
+        {
+            "Parameters": {},
+            "Identifier": "99458f47-6941-48ce-9b90-fdf184759b22",
+            "Type": "DisconnectParticipant",
+            "Transitions": {}
+        },
+        {
+            "Parameters": {
+                "MediaStreamingState": "Enabled",
+                "MediaStreamType": "Audio",
+                "Participants": [
+                    {
+                        "ParticipantType": "Customer",
+                        "MediaDirections": [
+                            "To",
+                            "From"
+                        ]
+                    }
+                ]
+            },
+            "Identifier": "6728609a-9707-41f7-a87c-30ac1fde4f4c",
+            "Type": "UpdateContactMediaStreamingBehavior",
+            "Transitions": {
+                "NextAction": "Deepgram Configuration",
+                "Errors": [
+                    {
+                        "NextAction": "410057d0-9390-486b-bbb4-c4def2a7367c",
+                        "ErrorType": "NoMatchingError"
+                    }
+                ]
+            }
+        },
+        {
+            "Parameters": {
+                "Text": "Error starting streaming."
+            },
+            "Identifier": "410057d0-9390-486b-bbb4-c4def2a7367c",
+            "Type": "MessageParticipant",
+            "Transitions": {
+                "NextAction": "99458f47-6941-48ce-9b90-fdf184759b22",
+                "Errors": [
+                    {
+                        "NextAction": "99458f47-6941-48ce-9b90-fdf184759b22",
+                        "ErrorType": "NoMatchingError"
+                    }
+                ]
+            }
+        },
+        {
+            "Parameters": {
+                "Text": "Lambda function invoked successfully.\n"
+            },
+            "Identifier": "07273109-a75a-4742-aaae-ce35603c31fc",
+            "Type": "MessageParticipant",
+            "Transitions": {
+                "NextAction": "Play 100 mins of silence",
+                "Errors": [
+                    {
+                        "NextAction": "99458f47-6941-48ce-9b90-fdf184759b22",
+                        "ErrorType": "NoMatchingError"
+                    }
+                ]
+            }
+        },
+        {
+            "Parameters": {
+                "Text": "Lambda function failed or timed out. If you are running a load test, timing out is expected and fine."
+            },
+            "Identifier": "3f9659a3-56a5-4f3c-a431-fd9da2306459",
+            "Type": "MessageParticipant",
+            "Transitions": {
+                "NextAction": "Play 100 mins of silence",
+                "Errors": [
+                    {
+                        "NextAction": "99458f47-6941-48ce-9b90-fdf184759b22",
+                        "ErrorType": "NoMatchingError"
+                    }
+                ]
+            }
+        },
+        {
+            "Parameters": {
+                "Attributes": {
+                    "dg_callback": "https://YOUR-ENDPOINT-HERE.com/{contact-id}",
+                    "dg_model": "nova",
+                    "dg_tag": "someTag someOtherTag"
+                },
+                "TargetContact": "Current"
+            },
+            "Identifier": "Deepgram Configuration",
+            "Type": "UpdateContactAttributes",
+            "Transitions": {
+                "NextAction": "Invoke Trigger Lambda",
+                "Errors": [
+                    {
+                        "NextAction": "4171b9a2-268b-4435-9a35-59dab368e0f5",
+                        "ErrorType": "NoMatchingError"
+                    }
+                ]
+            }
+        },
+        {
+            "Parameters": {
+                "LambdaFunctionARN": "",
+                "InvocationTimeLimitSeconds": "8",
+                "ResponseValidation": {
+                    "ResponseType": "STRING_MAP"
+                }
+            },
+            "Identifier": "Invoke Trigger Lambda",
+            "Type": "InvokeLambdaFunction",
+            "Transitions": {
+                "NextAction": "07273109-a75a-4742-aaae-ce35603c31fc",
+                "Errors": [
+                    {
+                        "NextAction": "3f9659a3-56a5-4f3c-a431-fd9da2306459",
+                        "ErrorType": "NoMatchingError"
+                    }
+                ]
+            }
+        }
+    ]
+}

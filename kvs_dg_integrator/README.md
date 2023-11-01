@@ -1,25 +1,20 @@
 # KVS DG Integrator
 
-This is a long-running task that pulls audio from Kinesis Video Streams 
-and sends it to Deepgram. It is triggered by the KVS DG Trigger Lambda 
-function, which passes it all the info it needs for the session.
+This is an AWS Fargate task that pulls call audio from Kinesis Video Streams and sends it to Deepgram. It is called by the KVS DG Trigger Lambda function, which passes it all the info it needs for the session. Sessions are initiated by POST requests sent to its `/start-session` endpoint. 
 
-## Deploy to Fargate
-
-Build the image and push it to ECR:
-
+**Create the ECR repo where the Docker image will live:**
 ```shell
-docker build --platform linux/amd64 -t 396185571030.dkr.ecr.us-east-1.amazonaws.com/kvs-dg-integrator:latest . \
-&& aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 396185571030.dkr.ecr.us-east-1.amazonaws.com \
-&& docker push 396185571030.dkr.ecr.us-east-1.amazonaws.com/kvs-dg-integrator:latest
+aws ecr create-repository --repository-name kvs-dg-integrator
 ```
 
-Then spin up the Fargate task and all its associated resources
-using `cloudformation.yaml`.
-
-If you don't need to recreate the whole stack, you can also just redeploy the
-Fargate task:
-
+**Build the image and push it to ECR (run this in the `kvs_dg_integrator` folder):**
 ```shell
-aws ecs update-service --cluster arn:aws:ecs:us-east-1:396185571030:cluster/kvs-dg-integrator-cluster --service <service-arn> --force-new-deployment
+docker build --platform linux/amd64 -t <YOUR-ACCOUNT-NUMBER>.dkr.ecr.<YOUR-REGION>.amazonaws.com/kvs-dg-integrator:latest . \
+&& aws ecr get-login-password --region <YOUR-REGION> | docker login --username AWS --password-stdin <YOUR-ACCOUNT-NUMBER>.dkr.ecr.<YOUR-REGION>.amazonaws.com \
+&& docker push <YOUR-ACCOUNT-NUMBER>.dkr.ecr.<YOUR-REGION>.amazonaws.com/kvs-dg-integrator:latest
+```
+
+**Redeploy with the latest image, without rebuilding the CloudFormation stack:**
+```shell
+aws ecs update-service --cluster arn:aws:ecs:<YOUR-REGION>:<YOUR-ACCOUNT-NUMBER>:cluster/kvs-dg-integrator-cluster --service <SERVICE-ARN> --force-new-deployment
 ```

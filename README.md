@@ -1,5 +1,5 @@
 # amazon-connect-integration
-This repo enables real-time transcription of Amazon Connect calls with Deepgram, using self-hosted AWS infrastructure.
+This repo enables real-time transcription of Amazon Connect calls with Deepgram, using self-hosted AWS infrastructure. For detailed documentation, see https://developers.deepgram.com/docs/deepgram-with-amazon-connect.
 
 ## Deploy the Integration
 
@@ -38,5 +38,3 @@ Also included is an Amazon Connect contact flow that demonstrates how to use the
 6. Save and publish the contact flow.
 7. Assign the contact flow to a phone number ([guide](https://docs.aws.amazon.com/connect/latest/adminguide/associate-claimed-ported-phone-number-to-flow.html)).
 8. Call into the phone number. After it plays the initial message, say something and watch your callback server to make sure your words are being transcribed.
-
-More detailed docs to come!

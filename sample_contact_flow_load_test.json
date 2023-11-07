@@ -1,0 +1,632 @@
+{
+    "Version": "2019-10-30",
+    "StartAction": "856dd865-e5a0-49c6-aacc-55fe53c38a22",
+    "Metadata": {
+        "entryPointPosition": {
+            "x": 20,
+            "y": 18.4
+        },
+        "ActionMetadata": {
+            "3c0a2902-d59f-4da9-a565-97f8d7d5519a": {
+                "position": {
+                    "x": 873.6,
+                    "y": 285.6
+                }
+            },
+            "410057d0-9390-486b-bbb4-c4def2a7367c": {
+                "position": {
+                    "x": 524,
+                    "y": 211.2
+                }
+            },
+            "af86e23d-382a-4cf8-b4af-e7db3b823ca2": {
+                "position": {
+                    "x": 874.4,
+                    "y": 483.2
+                }
+            },
+            "121525e4-e75e-42d3-9565-dcbfda0e1126": {
+                "position": {
+                    "x": 881.6,
+                    "y": 934.4
+                }
+            },
+            "Play 100 mins of silence": {
+                "position": {
+                    "x": 534.4,
+                    "y": 1374.4
+                },
+                "isFriendlyName": true
+            },
+            "99458f47-6941-48ce-9b90-fdf184759b22": {
+                "position": {
+                    "x": 1232.8,
+                    "y": 1425.6
+                }
+            },
+            "Play 1 min of silence": {
+                "position": {
+                    "x": 877.6,
+                    "y": 1371.2
+                },
+                "isFriendlyName": true
+            },
+            "6a837184-f7aa-4445-89fb-31c3ade5b9fc": {
+                "position": {
+                    "x": 879.2,
+                    "y": 692.8
+                }
+            },
+            "96d92aac-244a-45cf-9487-4c3f6301d5c2": {
+                "position": {
+                    "x": 182.4,
+                    "y": 1380.8
+                }
+            },
+            "856dd865-e5a0-49c6-aacc-55fe53c38a22": {
+                "position": {
+                    "x": 185.6,
+                    "y": 14.4
+                }
+            },
+            "cde4015e-aa9b-4fa2-8ce8-0042fccbd70b": {
+                "position": {
+                    "x": 872.8,
+                    "y": 98.4
+                }
+            },
+            "d5bd7724-4436-4bfc-bd2a-d0bee26963a1": {
+                "position": {
+                    "x": 521.6,
+                    "y": 0
+                }
+            },
+            "a41e78a9-df03-4011-99b0-50077c0bcd63": {
+                "position": {
+                    "x": 527.2,
+                    "y": 862.4
+                }
+            },
+            "a31ce016-12db-4e5d-8390-4760fdaa0f86": {
+                "position": {
+                    "x": 1573.6,
+                    "y": 1151.2
+                }
+            },
+            "4171b9a2-268b-4435-9a35-59dab368e0f5": {
+                "position": {
+                    "x": 522.4,
+                    "y": 416
+                }
+            },
+            "6728609a-9707-41f7-a87c-30ac1fde4f4c": {
+                "position": {
+                    "x": 185.6,
+                    "y": 204.8
+                },
+                "toCustomer": true,
+                "fromCustomer": true
+            },
+            "3f9659a3-56a5-4f3c-a431-fd9da2306459": {
+                "position": {
+                    "x": 523.2,
+                    "y": 632.8
+                }
+            },
+            "Subsequent Sessions Configuration": {
+                "position": {
+                    "x": 190.4,
+                    "y": 861.6
+                },
+                "isFriendlyName": true,
+                "dynamicParams": []
+            },
+            "First Session Configuration": {
+                "position": {
+                    "x": 187.2,
+                    "y": 412
+                },
+                "isFriendlyName": true,
+                "dynamicParams": []
+            },
+            "Invoke Trigger Lambda": {
+                "position": {
+                    "x": 189.6,
+                    "y": 632
+                },
+                "isFriendlyName": true,
+                "dynamicMetadata": {}
+            },
+            "c822ffc4-83da-4933-bfff-bf036cfc5e50": {
+                "position": {
+                    "x": 1227.2,
+                    "y": 1111.2
+                }
+            },
+            "Trigger Subsequent Sessions": {
+                "position": {
+                    "x": 184.8,
+                    "y": 1114.4
+                },
+                "isFriendlyName": true
+            },
+            "Play 2 seconds of silence": {
+                "position": {
+                    "x": 531.2,
+                    "y": 1112.8
+                },
+                "isFriendlyName": true
+            },
+            "Invoke Subsequent Trigger Lambda": {
+                "position": {
+                    "x": 880,
+                    "y": 1112
+                },
+                "isFriendlyName": true,
+                "dynamicMetadata": {}
+            }
+        },
+        "Annotations": [
+            {
+                "type": "default",
+                "id": "0bd14c82-fa52-4d48-b015-4e11d01db7c7",
+                "content": "Swap your callback URL into this block to receive the transcripts of the first session. Once all of the sessions have started, you can talk into the call and watch the transcripts to observe the latency at peak load. ",
+                "actionId": "First Session Configuration",
+                "isFolded": true,
+                "position": {
+                    "x": 253.16666666666666,
+                    "y": 721.6666666666666
+                },
+                "size": {
+                    "height": 295,
+                    "width": 300
+                }
+            },
+            {
+                "type": "default",
+                "id": "302aa7be-a3b8-467f-b1ff-66df21c69cc8",
+                "content": "Swap in your trigger lambda here.",
+                "actionId": "Invoke Trigger Lambda",
+                "isFolded": true,
+                "position": {
+                    "x": 256.1666666666667,
+                    "y": 996.6666666666666
+                },
+                "size": {
+                    "height": 295,
+                    "width": 300
+                }
+            },
+            {
+                "type": "default",
+                "id": "8c4b4f32-fc59-4ec8-be5e-24a87932f737",
+                "content": "This block makes subsequent sessions in the load test behave differently than the first session. There are two differences:\n\n1. Only the first session uses a callback. This way you can watch the callbacks coming into your callback URL and not be confused about which session they're part of.\n\n2. The first session allows the audio to be passed to Deepgram as quickly as possible, but subsequent sessions enforce a realtime rate. Enforcing realtime is important because the later sessions are being initiated well after the \"Start Media Streaming\" block, so by default the integration would try to pull audio very quickly to catch up. In order to have those later sessions behave like normal calls, we have to disable that catch-up behavior.",
+                "actionId": "Subsequent Sessions Configuration",
+                "isFolded": true,
+                "position": {
+                    "x": 257.1666666666667,
+                    "y": 1283.6666666666667
+                },
+                "size": {
+                    "height": 295,
+                    "width": 300
+                }
+            },
+            {
+                "type": "default",
+                "id": "f72b2e2e-f885-4730-b363-92a6166cb3d5",
+                "content": "Swap in your trigger lambda here.",
+                "actionId": "Invoke Subsequent Trigger Lambda",
+                "isFolded": true,
+                "position": {
+                    "x": 1119.1666666666667,
+                    "y": 1596.6666666666667
+                },
+                "size": {
+                    "height": 295,
+                    "width": 300
+                }
+            },
+            {
+                "type": "default",
+                "id": "a3cf77a4-0fbd-4833-8320-4b3d0b4d7c5f",
+                "content": "Modify this block to choose the interval at which new sessions are started in the load test.",
+                "actionId": "Play 2 seconds of silence",
+                "isFolded": true,
+                "position": {
+                    "x": 683.1666666666666,
+                    "y": 1597.6666666666667
+                },
+                "size": {
+                    "height": 295,
+                    "width": 300
+                }
+            },
+            {
+                "type": "default",
+                "id": "ab7300be-732b-4114-bebf-f1bb966d1360",
+                "content": "Modify this block to choose the number of total sessions the load test should be running at its peak. The number is really 1 more than the number of loop iterations you choose here.",
+                "actionId": "Trigger Subsequent Sessions",
+                "isFolded": true,
+                "position": {
+                    "x": 250.16666666666666,
+                    "y": 1599.6666666666667
+                },
+                "size": {
+                    "height": 295,
+                    "width": 300
+                }
+            }
+        ],
+        "name": "Sample Deepgram Load Test flow",
+        "description": "",
+        "type": "contactFlow",
+        "status": "saved",
+        "hash": {}
+    },
+    "Actions": [
+        {
+            "Parameters": {},
+            "Identifier": "3c0a2902-d59f-4da9-a565-97f8d7d5519a",
+            "Type": "DisconnectParticipant",
+            "Transitions": {}
+        },
+        {
+            "Parameters": {
+                "Text": "Error starting streaming."
+            },
+            "Identifier": "410057d0-9390-486b-bbb4-c4def2a7367c",
+            "Type": "MessageParticipant",
+            "Transitions": {
+                "NextAction": "3c0a2902-d59f-4da9-a565-97f8d7d5519a",
+                "Errors": [
+                    {
+                        "NextAction": "3c0a2902-d59f-4da9-a565-97f8d7d5519a",
+                        "ErrorType": "NoMatchingError"
+                    }
+                ]
+            }
+        },
+        {
+            "Parameters": {},
+            "Identifier": "af86e23d-382a-4cf8-b4af-e7db3b823ca2",
+            "Type": "DisconnectParticipant",
+            "Transitions": {}
+        },
+        {
+            "Parameters": {},
+            "Identifier": "121525e4-e75e-42d3-9565-dcbfda0e1126",
+            "Type": "DisconnectParticipant",
+            "Transitions": {}
+        },
+        {
+            "Parameters": {
+                "LoopCount": "100"
+            },
+            "Identifier": "Play 100 mins of silence",
+            "Type": "Loop",
+            "Transitions": {
+                "NextAction": "99458f47-6941-48ce-9b90-fdf184759b22",
+                "Conditions": [
+                    {
+                        "NextAction": "Play 1 min of silence",
+                        "Condition": {
+                            "Operator": "Equals",
+                            "Operands": [
+                                "ContinueLooping"
+                            ]
+                        }
+                    },
+                    {
+                        "NextAction": "99458f47-6941-48ce-9b90-fdf184759b22",
+                        "Condition": {
+                            "Operator": "Equals",
+                            "Operands": [
+                                "DoneLooping"
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "Parameters": {},
+            "Identifier": "99458f47-6941-48ce-9b90-fdf184759b22",
+            "Type": "DisconnectParticipant",
+            "Transitions": {}
+        },
+        {
+            "Parameters": {
+                "SSML": "<speak>\n<break time=\"5000ms\"/>\n<break time=\"5000ms\"/>\n<break time=\"5000ms\"/>\n<break time=\"5000ms\"/>\n<break time=\"5000ms\"/>\n<break time=\"5000ms\"/>\n<break time=\"5000ms\"/>\n<break time=\"5000ms\"/>\n<break time=\"5000ms\"/>\n<break time=\"5000ms\"/>\n<break time=\"5000ms\"/>\n<break time=\"5000ms\"/>\n</speak>"
+            },
+            "Identifier": "Play 1 min of silence",
+            "Type": "MessageParticipant",
+            "Transitions": {
+                "NextAction": "Play 100 mins of silence",
+                "Errors": [
+                    {
+                        "NextAction": "99458f47-6941-48ce-9b90-fdf184759b22",
+                        "ErrorType": "NoMatchingError"
+                    }
+                ]
+            }
+        },
+        {
+            "Parameters": {},
+            "Identifier": "6a837184-f7aa-4445-89fb-31c3ade5b9fc",
+            "Type": "DisconnectParticipant",
+            "Transitions": {}
+        },
+        {
+            "Parameters": {
+                "Text": "All load testing sessions have been started."
+            },
+            "Identifier": "96d92aac-244a-45cf-9487-4c3f6301d5c2",
+            "Type": "MessageParticipant",
+            "Transitions": {
+                "NextAction": "Play 100 mins of silence",
+                "Errors": [
+                    {
+                        "NextAction": "99458f47-6941-48ce-9b90-fdf184759b22",
+                        "ErrorType": "NoMatchingError"
+                    }
+                ]
+            }
+        },
+        {
+            "Parameters": {
+                "FlowLoggingBehavior": "Enabled"
+            },
+            "Identifier": "856dd865-e5a0-49c6-aacc-55fe53c38a22",
+            "Type": "UpdateFlowLoggingBehavior",
+            "Transitions": {
+                "NextAction": "d5bd7724-4436-4bfc-bd2a-d0bee26963a1"
+            }
+        },
+        {
+            "Parameters": {},
+            "Identifier": "cde4015e-aa9b-4fa2-8ce8-0042fccbd70b",
+            "Type": "DisconnectParticipant",
+            "Transitions": {}
+        },
+        {
+            "Parameters": {
+                "Text": "This call will run a load test on your Deepgram integration."
+            },
+            "Identifier": "d5bd7724-4436-4bfc-bd2a-d0bee26963a1",
+            "Type": "MessageParticipant",
+            "Transitions": {
+                "NextAction": "6728609a-9707-41f7-a87c-30ac1fde4f4c",
+                "Errors": [
+                    {
+                        "NextAction": "cde4015e-aa9b-4fa2-8ce8-0042fccbd70b",
+                        "ErrorType": "NoMatchingError"
+                    }
+                ]
+            }
+        },
+        {
+            "Parameters": {
+                "Text": "Error setting subsequent calls contact attributes"
+            },
+            "Identifier": "a41e78a9-df03-4011-99b0-50077c0bcd63",
+            "Type": "MessageParticipant",
+            "Transitions": {
+                "NextAction": "121525e4-e75e-42d3-9565-dcbfda0e1126",
+                "Errors": [
+                    {
+                        "NextAction": "121525e4-e75e-42d3-9565-dcbfda0e1126",
+                        "ErrorType": "NoMatchingError"
+                    }
+                ]
+            }
+        },
+        {
+            "Parameters": {},
+            "Identifier": "a31ce016-12db-4e5d-8390-4760fdaa0f86",
+            "Type": "DisconnectParticipant",
+            "Transitions": {}
+        },
+        {
+            "Parameters": {
+                "Text": "Error setting first call contact attributes."
+            },
+            "Identifier": "4171b9a2-268b-4435-9a35-59dab368e0f5",
+            "Type": "MessageParticipant",
+            "Transitions": {
+                "NextAction": "af86e23d-382a-4cf8-b4af-e7db3b823ca2",
+                "Errors": [
+                    {
+                        "NextAction": "af86e23d-382a-4cf8-b4af-e7db3b823ca2",
+                        "ErrorType": "NoMatchingError"
+                    }
+                ]
+            }
+        },
+        {
+            "Parameters": {
+                "MediaStreamingState": "Enabled",
+                "MediaStreamType": "Audio",
+                "Participants": [
+                    {
+                        "ParticipantType": "Customer",
+                        "MediaDirections": [
+                            "To",
+                            "From"
+                        ]
+                    }
+                ]
+            },
+            "Identifier": "6728609a-9707-41f7-a87c-30ac1fde4f4c",
+            "Type": "UpdateContactMediaStreamingBehavior",
+            "Transitions": {
+                "NextAction": "First Session Configuration",
+                "Errors": [
+                    {
+                        "NextAction": "410057d0-9390-486b-bbb4-c4def2a7367c",
+                        "ErrorType": "NoMatchingError"
+                    }
+                ]
+            }
+        },
+        {
+            "Parameters": {
+                "Text": "Lambda function failed or timed out."
+            },
+            "Identifier": "3f9659a3-56a5-4f3c-a431-fd9da2306459",
+            "Type": "MessageParticipant",
+            "Transitions": {
+                "NextAction": "6a837184-f7aa-4445-89fb-31c3ade5b9fc",
+                "Errors": [
+                    {
+                        "NextAction": "6a837184-f7aa-4445-89fb-31c3ade5b9fc",
+                        "ErrorType": "NoMatchingError"
+                    }
+                ]
+            }
+        },
+        {
+            "Parameters": {
+                "Attributes": {
+                    "dg_callback": "UNSET",
+                    "dgintegrator_enforcerealtime": "true"
+                },
+                "TargetContact": "Current"
+            },
+            "Identifier": "Subsequent Sessions Configuration",
+            "Type": "UpdateContactAttributes",
+            "Transitions": {
+                "NextAction": "Trigger Subsequent Sessions",
+                "Errors": [
+                    {
+                        "NextAction": "a41e78a9-df03-4011-99b0-50077c0bcd63",
+                        "ErrorType": "NoMatchingError"
+                    }
+                ]
+            }
+        },
+        {
+            "Parameters": {
+                "Attributes": {
+                    "dg_model": "nova",
+                    "dg_tag": "loadTest",
+                    "dg_callback": "https://YOUR-ENDPOINT-HERE.com"
+                },
+                "TargetContact": "Current"
+            },
+            "Identifier": "First Session Configuration",
+            "Type": "UpdateContactAttributes",
+            "Transitions": {
+                "NextAction": "Invoke Trigger Lambda",
+                "Errors": [
+                    {
+                        "NextAction": "4171b9a2-268b-4435-9a35-59dab368e0f5",
+                        "ErrorType": "NoMatchingError"
+                    }
+                ]
+            }
+        },
+        {
+            "Parameters": {
+                "LambdaFunctionARN": "",
+                "InvocationTimeLimitSeconds": "8",
+                "ResponseValidation": {
+                    "ResponseType": "STRING_MAP"
+                }
+            },
+            "Identifier": "Invoke Trigger Lambda",
+            "Type": "InvokeLambdaFunction",
+            "Transitions": {
+                "NextAction": "Subsequent Sessions Configuration",
+                "Errors": [
+                    {
+                        "NextAction": "3f9659a3-56a5-4f3c-a431-fd9da2306459",
+                        "ErrorType": "NoMatchingError"
+                    }
+                ]
+            }
+        },
+        {
+            "Parameters": {
+                "Text": "Lambda function failed or timed out."
+            },
+            "Identifier": "c822ffc4-83da-4933-bfff-bf036cfc5e50",
+            "Type": "MessageParticipant",
+            "Transitions": {
+                "NextAction": "a31ce016-12db-4e5d-8390-4760fdaa0f86",
+                "Errors": [
+                    {
+                        "NextAction": "a31ce016-12db-4e5d-8390-4760fdaa0f86",
+                        "ErrorType": "NoMatchingError"
+                    }
+                ]
+            }
+        },
+        {
+            "Parameters": {
+                "LoopCount": "89"
+            },
+            "Identifier": "Trigger Subsequent Sessions",
+            "Type": "Loop",
+            "Transitions": {
+                "NextAction": "96d92aac-244a-45cf-9487-4c3f6301d5c2",
+                "Conditions": [
+                    {
+                        "NextAction": "Play 2 seconds of silence",
+                        "Condition": {
+                            "Operator": "Equals",
+                            "Operands": [
+                                "ContinueLooping"
+                            ]
+                        }
+                    },
+                    {
+                        "NextAction": "96d92aac-244a-45cf-9487-4c3f6301d5c2",
+                        "Condition": {
+                            "Operator": "Equals",
+                            "Operands": [
+                                "DoneLooping"
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "Parameters": {
+                "SSML": "<speak>\n<break time=\"2000ms\"/>\n</speak>"
+            },
+            "Identifier": "Play 2 seconds of silence",
+            "Type": "MessageParticipant",
+            "Transitions": {
+                "NextAction": "Invoke Subsequent Trigger Lambda",
+                "Errors": [
+                    {
+                        "NextAction": "a31ce016-12db-4e5d-8390-4760fdaa0f86",
+                        "ErrorType": "NoMatchingError"
+                    }
+                ]
+            }
+        },
+        {
+            "Parameters": {
+                "LambdaFunctionARN": "",
+                "InvocationTimeLimitSeconds": "8",
+                "ResponseValidation": {
+                    "ResponseType": "STRING_MAP"
+                }
+            },
+            "Identifier": "Invoke Subsequent Trigger Lambda",
+            "Type": "InvokeLambdaFunction",
+            "Transitions": {
+                "NextAction": "Trigger Subsequent Sessions",
+                "Errors": [
+                    {
+                        "NextAction": "c822ffc4-83da-4933-bfff-bf036cfc5e50",
+                        "ErrorType": "NoMatchingError"
+                    }
+                ]
+            }
+        }
+    ]
+}

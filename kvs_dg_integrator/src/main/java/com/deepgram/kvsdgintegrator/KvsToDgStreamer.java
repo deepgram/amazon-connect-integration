@@ -31,12 +31,12 @@ public class KvsToDgStreamer {
 	public static void doStreamingSession(
 			IntegratorArguments integratorArguments,
 			String deepgramApi,
-			String deepgramApiKey,
-			boolean enforceRealtime
+			String deepgramApiKey
 	) throws Exception {
 		String streamARN = integratorArguments.kvsStream().arn();
 		String startFragmentNum = integratorArguments.kvsStream().startFragmentNumber();
 		String contactId = integratorArguments.contactId();
+		boolean enforceRealtime = integratorArguments.enforceRealtime();
 
 		String streamName = streamARN.substring(streamARN.indexOf("/") + 1, streamARN.lastIndexOf("/"));
 

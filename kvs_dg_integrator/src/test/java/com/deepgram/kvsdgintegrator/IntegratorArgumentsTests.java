@@ -24,7 +24,8 @@ class IntegratorArgumentsTests {
                         "model": "nova",
                         "tag": ["someTag1", "someTag2"],
                         "callback": "https://example.com/4a573372-1f28-4e26-b97b-XXXXXXXXXXX"
-                    }
+                    },
+                    "enforceRealtime": true
                 }""";
         IntegratorArguments expected = new IntegratorArguments(
                 "4a573372-1f28-4e26-b97b-XXXXXXXXXXX",
@@ -33,8 +34,9 @@ class IntegratorArgumentsTests {
                         "100"),
                 Map.of("model", List.of("nova"),
                         "tag", List.of("someTag1", "someTag2"),
-                        "callback", List.of("https://example.com/4a573372-1f28-4e26-b97b-XXXXXXXXXXX"))
-                );
+                        "callback", List.of("https://example.com/4a573372-1f28-4e26-b97b-XXXXXXXXXXX")),
+                true
+        );
         IntegratorArguments actual = IntegratorArguments.fromJson(json);
         assertEquals(expected, actual);
     }
@@ -53,6 +55,7 @@ class IntegratorArgumentsTests {
                         "tag": ["someTag1", "someTag2"],
                         "callback": "https://example.com/4a573372-1f28-4e26-b97b-XXXXXXXXXXX"
                     },
+                    "enforceRealtime": true,
                     "something": "else"
                 }""";
         assertThrows(Exception.class, () -> IntegratorArguments.fromJson(json));
@@ -70,7 +73,8 @@ class IntegratorArgumentsTests {
                         "model": "nova",
                         "tag": ["someTag1", "someTag2"],
                         "callback": "https://example.com/4a573372-1f28-4e26-b97b-XXXXXXXXXXX"
-                    }
+                    },
+                    "enforceRealtime": true
                 }""";
         assertThrows(Exception.class, () -> IntegratorArguments.fromJson(json));
     }
@@ -84,7 +88,8 @@ class IntegratorArgumentsTests {
                         "model": "nova",
                         "tag": ["someTag1", "someTag2"],
                         "callback": "https://example.com/4a573372-1f28-4e26-b97b-XXXXXXXXXXX"
-                    }
+                    },
+                    "enforceRealtime": true
                 }""";
         assertThrows(Exception.class, () -> IntegratorArguments.fromJson(json));
     }
@@ -97,7 +102,8 @@ class IntegratorArgumentsTests {
                     "kvsStream": {
                         "arn": "arn:aws:kinesisvideo::eu-west-2:111111111111:stream/instance-alias-contact-ddddddd-bbbb-dddd-eeee-ffffffffffff/9999999999999",
                         "startFragmentNumber": "100"
-                    }
+                    },
+                    "enforceRealtime": true
                 }""";
         assertThrows(Exception.class, () -> IntegratorArguments.fromJson(json));
     }
@@ -115,7 +121,8 @@ class IntegratorArgumentsTests {
                         "model": "nova",
                         "tag": ["someTag1", "someTag2"],
                         "callback": "https://example.com/4a573372-1f28-4e26-b97b-XXXXXXXXXXX"
-                    }
+                    },
+                    "enforceRealtime": true
                 }""";
         assertThrows(Exception.class, () -> IntegratorArguments.fromJson(json));
     }
@@ -130,7 +137,8 @@ class IntegratorArgumentsTests {
                         "model": "nova",
                         "tag": ["someTag1", "someTag2"],
                         "callback": "https://example.com/4a573372-1f28-4e26-b97b-XXXXXXXXXXX"
-                    }
+                    },
+                    "enforceRealtime": true
                 }""";
         assertThrows(Exception.class, () -> IntegratorArguments.fromJson(json));
     }
@@ -144,7 +152,8 @@ class IntegratorArgumentsTests {
                         "arn": "arn:aws:kinesisvideo::eu-west-2:111111111111:stream/instance-alias-contact-ddddddd-bbbb-dddd-eeee-ffffffffffff/9999999999999",
                         "startFragmentNumber": "100"
                     },
-                    "dgParams": null
+                    "dgParams": null,
+                    "enforceRealtime": true
                 }""";
         assertThrows(Exception.class, () -> IntegratorArguments.fromJson(json));
     }

@@ -71,3 +71,15 @@ class TestGetDgParams(unittest.TestCase):
         actual_dg_params = lambda_function.get_dg_params(contact_attrs, contact_id)
 
         self.assertIsNone(actual_dg_params)
+
+    def test_unset(self):
+        contact_attrs = {
+            "dg_model": "nova",
+            "dg_callback": "UNSET",
+            "dg_tag": "abc",
+        }
+        contact_id = "11112222-3333-4444-5555-aaaabbbbcccc"
+        expected_dg_params = {"model": "nova", "tag": ["abc", "dg_amazonconnect"]}
+        actual_dg_params = lambda_function.get_dg_params(contact_attrs, contact_id)
+
+        self.assertEqual(actual_dg_params, expected_dg_params)

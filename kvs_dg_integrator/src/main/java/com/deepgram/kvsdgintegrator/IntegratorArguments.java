@@ -17,16 +17,19 @@ import java.util.*;
 public record IntegratorArguments(
         String contactId,
         KvsStream kvsStream,
-        @JsonDeserialize(using = DgParamsDeserializer.class) Map<String, List<String>> dgParams) {
+        @JsonDeserialize(using = DgParamsDeserializer.class) Map<String, List<String>> dgParams,
+        boolean enforceRealtime) {
     @JsonCreator
     public IntegratorArguments(
             @JsonProperty(required = true, value = "contactId") String contactId,
             @JsonProperty(required = true, value = "kvsStream") KvsStream kvsStream,
-            @JsonProperty(required = true, value = "dgParams") Map<String, List<String>> dgParams
+            @JsonProperty(required = true, value = "dgParams") Map<String, List<String>> dgParams,
+            @JsonProperty(required = true, value = "enforceRealtime") boolean enforceRealtime
     ) {
         this.contactId = Validate.notNull(contactId);
         this.kvsStream = Validate.notNull(kvsStream);
         this.dgParams = Validate.notNull(dgParams);
+        this.enforceRealtime = enforceRealtime;
     }
 
     private static class DgParamsDeserializer extends JsonDeserializer<Map<String, List<String>>> {

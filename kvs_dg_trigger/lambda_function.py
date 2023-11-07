@@ -36,6 +36,9 @@ def handler(event, context):
 
     kvs_stream_info = contact_data["MediaStreams"]["Customer"]["Audio"]
 
+    enforce_realtime_attr = contact_attrs.get("dgintegrator_enforcerealtime")
+    enforce_realtime = enforce_realtime_attr == "true"
+
     integrator_payload = {
         "contactId": contact_id,
         "kvsStream": {
@@ -43,6 +46,7 @@ def handler(event, context):
             "startFragmentNumber": kvs_stream_info["StartFragmentNumber"],
         },
         "dgParams": dg_params,
+        "enforceRealtime": enforce_realtime,
     }
     is_success = start_integrator_session(integrator_payload)
 
@@ -98,6 +102,9 @@ def contact_attrs_to_dg_params(contact_attrs):
             continue
 
         attr_value = contact_attrs[attr_key].strip()
+        if attr_value.lower() == "unset":
+            # user has opted to unset this contact attribute, so we ignore it
+            continue
 
         dg_param_key = attr_key[3:]
         dg_param_values = []
@@ -176,35 +183,10 @@ def start_integrator_session(payload):
         return False
     logger.info(f"KVS_INTEGRATOR_DOMAIN = {integrator_domain}")
 
-    load_test_num_sessions = os.getenv("LOAD_TEST_NUM_SESSIONS")
-    num_sessions = int(load_test_num_sessions) if load_test_num_sessions else 1
-    if num_sessions < 1:
-        logger.error("LOAD_TEST_NUM_SESSIONS must not be less than 1")
-        return False
-
-    load_test_inverval_ms = os.getenv("LOAD_TEST_INTERVAL_MS")
-    interval_ms = int(load_test_inverval_ms) if load_test_inverval_ms else 0
-    if interval_ms < 0:
-        logger.error("LOAD_TEST_INTERVAL_MS must not be negative")
-        return False
-    interval_secs = interval_ms / 1000
-
-    if num_sessions != 1:
-        logger.info(
-            f"Running load test with {num_sessions} sessions at a {interval_ms}ms interval"
-        )
-
-    for i in range(num_sessions):
-        if i != 0:
-            time.sleep(interval_secs)
-
-        if not make_integrator_request(
-            integrator_domain,
-            payload,
-        ):
-            return False
-
-    return True
+    return make_integrator_request(
+        integrator_domain,
+        payload,
+    )
 
 
 def make_integrator_request(integrator_domain, payload):
@@ -215,6 +197,7 @@ def make_integrator_request(integrator_domain, payload):
         response = requests.post(url, headers=headers, data=json.dumps(payload))
         if response.status_code == 200:
             logger.info("Successfully started integrator session.")
+            return True
         else:
             logger.error(
                 f"Integrator responded with {response.status_code}: {response.text}"
@@ -223,5 +206,3 @@ def make_integrator_request(integrator_domain, payload):
     except Exception as err:
         logger.error(f"Error sending request to integrator: {err}")
         return False
-
-    return True

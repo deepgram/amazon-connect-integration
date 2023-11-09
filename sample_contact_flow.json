@@ -281,7 +281,7 @@
         },
         {
             "Parameters": {
-                "Text": "Lambda function failed or timed out. If you are running a load test, timing out is expected and fine."
+                "Text": "Lambda function failed or timed out."
             },
             "Identifier": "3f9659a3-56a5-4f3c-a431-fd9da2306459",
             "Type": "MessageParticipant",

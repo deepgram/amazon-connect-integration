@@ -24,12 +24,6 @@ Metadata:
           - kvsDgIntegratorDesiredTaskCount
           - kvsDgIntegratorTaskCpu
           - kvsDgIntegratorTaskMemory
-      - Label:
-          default: "Load Testing"
-        Parameters:
-          - loadTestIsEnabled
-          - loadTestNumSessions
-          - loadTestIntervalMs
 
     ParameterLabels:
       deepgramApi:
@@ -54,12 +48,6 @@ Metadata:
         default: Task CPU
       kvsDgIntegratorTaskMemory:
         default: Task Memory
-      loadTestIsEnabled:
-        default: Enable Load Test
-      loadTestNumSessions:
-        default: Num Sessions
-      loadTestIntervalMs:
-        default: Interval
 
 Parameters:
   deepgramApi:
@@ -137,33 +125,6 @@ Parameters:
       https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ecs-taskdefinition.html#cfn-ecs-taskdefinition-cpu
     Type: String
     Default: "1024"
-  loadTestIsEnabled:
-    Description: >
-      Do you want to do a load test? This means your calls will be transcribed multiple times to
-      simulate many simultaneous calls. This can be useful for understanding how your configuration
-      will deal with your expected load.
-    Type: String
-    Default: "no"
-    AllowedValues:
-      - "yes"
-      - "no"
-  loadTestNumSessions:
-    Description: >
-      The number of times to transcribe each call. For example, if you set this to 20 and put a call
-      through the system, that call will be transcribed 20 times, simulating 20 concurrent calls.
-      This parameter is only used if load test is enabled.
-    Type: Number
-    Default: "20"
-  loadTestIntervalMs:
-    Description: >
-      The number of milliseconds to wait before triggering each new transcription session. New sessions
-      will be started at this cadence until `Num Sessions` is reached. This parameter is only used
-      if load test is enabled.
-    Type: Number
-    Default: "15000"
-
-Conditions:
-  IsLoadTestEnabled: !Equals [!Ref loadTestIsEnabled, "yes"]
 
 Resources:
   kvsDgTriggerRole:
@@ -200,16 +161,6 @@ Resources:
         Variables:
           KVS_DG_INTEGRATOR_DOMAIN: !GetAtt kvsDgIntegratorLoadBalancer.DNSName
           LOG_LEVEL: !Ref kvsDgTriggerLogLevel
-          LOAD_TEST_NUM_SESSIONS:
-            Fn::If:
-              - IsLoadTestEnabled
-              - !Ref loadTestNumSessions
-              - "1"
-          LOAD_TEST_INTERVAL_MS:
-            Fn::If:
-              - IsLoadTestEnabled
-              - !Ref loadTestIntervalMs
-              - "0"
       PackageType: "Image"
       Code:
         ImageUri: !Ref kvsDgTriggerImage
@@ -224,11 +175,7 @@ Resources:
       ClusterName: kvs-dg-integrator-cluster
       ClusterSettings:
         - Name: containerInsights
-          Value:
-            Fn::If:
-              - IsLoadTestEnabled
-              - "enabled"
-              - "disabled"
+          Value: "disabled" # If you are load testing, setting this to "enabled" can reveal useful info
 
   kvsDgIntegratorExecutionRole:
     Type: "AWS::IAM::Role"
@@ -293,12 +240,6 @@ Resources:
               Value: !Ref kvsDgIntegratorLogLevel
             - Name: APP_REGION
               Value: !Ref "AWS::Region"
-            - Name: ENFORCE_REALTIME
-              Value:
-                Fn::If:
-                  - IsLoadTestEnabled
-                  - "true"
-                  - "false"
           PortMappings:
             - HostPort: 80
               ContainerPort: 80
